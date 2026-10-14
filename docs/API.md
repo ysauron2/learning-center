@@ -24,6 +24,8 @@ Erro: `{ "error": { "code", "message", "details?" } }`.
 - `PATCH /courses/:id` — mesmos campos, todos opcionais.
 - `POST /courses/:id/status` — `{ status: planned|active|paused|completed }` (concluir força 100% manual).
 - `DELETE /courses/:id`
+- `POST /courses/import/preview` — `{ items: [{ title*, url*, progress (0–100), instructor? }] }` (1–500 itens). Não grava. Devolve `{ new[], existing[], invalid[] }`.
+- `POST /courses/import` — mesmo corpo. Cria só os cursos novos (plataforma `Udemy`; status `planned` com 0%, `active` de 1 a 99%, `completed` com 100%) e devolve `{ created, skipped, invalid, ids }`. Não altera cursos existentes. A identidade do curso é o slug de `/course/<slug>` ou o `course_id` do link do painel; a operação é atômica.
 
 Progresso: com aulas, `aulas concluídas / total`; sem aulas, `manualProgress`.
 

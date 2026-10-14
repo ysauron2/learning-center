@@ -32,6 +32,9 @@ export function errorHandler(err, _req, reply) {
   if (err.validation || err.statusCode === 400) {
     return reply.status(400).send({ error: { code: 'BAD_REQUEST', message: err.message } });
   }
+  if (err.statusCode === 415) {
+    return reply.status(415).send({ error: { code: 'UNSUPPORTED_MEDIA_TYPE', message: 'Tipo de conteúdo não suportado. Use application/json.' } });
+  }
   reply.log.error(err);
   return reply
     .status(500)

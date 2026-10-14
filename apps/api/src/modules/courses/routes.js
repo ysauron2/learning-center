@@ -3,19 +3,22 @@ import {
   courseCreate, courseUpdate, courseStatus, courseQuery,
   moduleCreate, lessonCreate, lessonUpdate,
 } from './schemas.js';
+import { importBody } from './import.js';
 
 function intParam(req) {
   const id = Number.parseInt(req.params.id, 10);
   return Number.isInteger(id) && id > 0 ? id : -1;
 }
 
-export function coursesRoutes(app, { courses }) {
+export function coursesRoutes(app, { courses, courseImporter }) {
   app.get('/courses', async (req) => ({ data: courses.list(parse(courseQuery, req.query)) }));
   app.get('/courses/summary', async () => ({ data: courses.summary() }));
   app.post('/courses', async (req, reply) => {
     const data = courses.create(parse(courseCreate, req.body));
     return reply.status(201).send({ data });
   });
+  app.post('/courses/import/preview', async (req) => ({ data: courseImporter.preview(parse(importBody, req.body)) }));
+  app.post('/courses/import', async (req) => ({ data: courseImporter.run(parse(importBody, req.body)) }));
   app.get('/courses/:id', async (req) => ({ data: courses.get(intParam(req)) }));
   app.patch('/courses/:id', async (req) => ({ data: courses.update(intParam(req), parse(courseUpdate, req.body)) }));
   app.post('/courses/:id/status', async (req) => ({

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api.js';
 import { useAsync, useDebounced, useToast } from '../lib/hooks.js';
 import { Icon } from '../components/Icon.jsx';
@@ -38,7 +38,10 @@ export default function Courses() {
           <h1 className="page-title">Cursos</h1>
           <p className="page-sub">Tudo o que você estuda, de qualquer plataforma, em um só lugar.</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setAdding(true)}><Icon name="plus" size={16} strokeWidth={2.4} />Adicionar curso</button>
+        <div className="row" style={{ gap: 8 }}>
+          <Link className="btn" to="/importar">Importar da Udemy</Link>
+          <button className="btn btn-primary" onClick={() => setAdding(true)}><Icon name="plus" size={16} strokeWidth={2.4} />Adicionar curso</button>
+        </div>
       </header>
 
       {total > 0 && (

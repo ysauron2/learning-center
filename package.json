@@ -12,6 +12,7 @@
     "build": "npm run build -w @learning-center/web",
     "start": "npm run start -w @learning-center/api",
     "test": "npm run test --workspaces --if-present",
-    "seed:demo": "npm run seed:demo -w @learning-center/api"
+    "seed:demo": "npm run seed:demo -w @learning-center/api",
+    "build:extension": "node scripts/build-extension.mjs"
   }
 }

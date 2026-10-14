@@ -14,15 +14,26 @@ export function openDb(file) {
   return db;
 }
 
-/** Executa `fn` dentro de uma transação; faz rollback se lançar erro. */
+const depths = new WeakMap();
+
+/**
+ * Executa `fn` dentro de uma transação; faz rollback se lançar erro.
+ * Chamadas aninhadas viram SAVEPOINT, então o rollback desfaz só o trecho interno
+ * (e o externo, se o erro continuar subindo).
+ */
 export function transaction(db, fn) {
-  db.exec('BEGIN');
+  const depth = depths.get(db) ?? 0;
+  const savepoint = `lc_sp_${depth}`;
+  db.exec(depth === 0 ? 'BEGIN' : `SAVEPOINT ${savepoint}`);
+  depths.set(db, depth + 1);
   try {
     const result = fn();
-    db.exec('COMMIT');
+    db.exec(depth === 0 ? 'COMMIT' : `RELEASE ${savepoint}`);
     return result;
   } catch (err) {
-    db.exec('ROLLBACK');
+    db.exec(depth === 0 ? 'ROLLBACK' : `ROLLBACK TO ${savepoint}; RELEASE ${savepoint}`);
     throw err;
+  } finally {
+    depths.set(db, depth);
   }
 }

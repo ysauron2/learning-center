@@ -17,8 +17,12 @@ como “em breve” na navegação e entram nas próximas fases (veja `docs/ARQU
   nível de foco, registro manual de tempo. A sessão sobrevive a recarregar a página.
 - **Tema claro/escuro** e layout responsivo (barra inferior no celular).
 
-Nada depende de API externa: o cadastro e o acompanhamento são manuais.
-Não há sincronização com a Udemy nem com outras plataformas.
+- **Importar da Udemy**: extensão de navegador que lê a página "Meu aprendizado" (você já
+  logado) e cadastra os cursos novos, com prévia antes de salvar. Veja
+  [`docs/IMPORTACAO-UDEMY.md`](docs/IMPORTACAO-UDEMY.md).
+
+Nada depende de API externa (a API de Afiliado da Udemy foi descartada): o acompanhamento é
+manual, e a importação da Udemy só traz a lista de cursos e o progresso que a própria página mostra.
 
 ## Requisitos
 

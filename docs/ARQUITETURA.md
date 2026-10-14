@@ -67,7 +67,8 @@ O timer não é anunciado a cada segundo (evita ruído para leitores de tela).
 |---|---|
 | Google Calendar | Módulo `integrations/calendar` criando eventos de blocos de estudo a partir de metas; OAuth guardado em `lc_settings` criptografado |
 | Provedores de IA | Interface `AiProvider` no módulo do tutor; chaves por variável de ambiente; nada é enviado sem ação explícita |
-| Plataformas com API oficial | Adaptador por plataforma que preenche `lc_courses/lc_lessons`; **não se presume** que a API pessoal da Udemy sincronize progresso. O cadastro manual continua sendo o caminho padrão |
+| Udemy | **API de Afiliado descartada** (só expõe catálogo público, não os cursos nem o progresso da conta). A importação é feita por uma extensão de navegador que lê a página "Meu aprendizado" já aberta pelo usuário (veja `docs/IMPORTACAO-UDEMY.md`) |
+| Outras plataformas com API oficial | Adaptador por plataforma que preenche `lc_courses/lc_lessons`. O cadastro manual continua sendo o caminho padrão |
 | Meu Hub | Seção acima |
 
 ## Roadmap
