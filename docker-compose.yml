@@ -1,0 +1,19 @@
+# Uso:  docker compose up -d --build
+# No ZimaOS: importe este arquivo como app personalizado (Custom Install) e
+# mantenha o volume de dados em um caminho persistente.
+services:
+  learning-center:
+    build: .
+    image: learning-center:latest
+    container_name: learning-center
+    restart: unless-stopped
+    ports:
+      - "${LC_PORT:-3000}:3000"
+    environment:
+      TZ: ${TZ:-America/Sao_Paulo}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    volumes:
+      - learning-center-data:/data
+
+volumes:
+  learning-center-data:

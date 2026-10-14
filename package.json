@@ -1,0 +1,17 @@
+{
+  "name": "learning-center",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Meu Hub — Learning Center: plataforma pessoal de estudos (MVP)",
+  "engines": { "node": ">=22.13" },
+  "workspaces": ["apps/*"],
+  "scripts": {
+    "dev:api": "npm run dev -w @learning-center/api",
+    "dev:web": "npm run dev -w @learning-center/web",
+    "build": "npm run build -w @learning-center/web",
+    "start": "npm run start -w @learning-center/api",
+    "test": "npm run test --workspaces --if-present",
+    "seed:demo": "npm run seed:demo -w @learning-center/api"
+  }
+}
