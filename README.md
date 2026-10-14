@@ -2,11 +2,12 @@
 
 Plataforma pessoal de estudos: cursos, sessões de foco, metas semanais e progresso.
 Este repositório é o **MVP** (Fase 1) do design aprovado. Os módulos avançados
-(trilhas, certificações, anotações, laboratórios, analytics, tutor IA) aparecem
+(trilhas, certificações, anotações, laboratórios, tutor IA) aparecem
 como “em breve” na navegação e entram nas próximas fases (veja `docs/ARQUITETURA.md`).
 
 ## O que já funciona
 
+- **Analytics**: tempo por dia/semana, por curso, quando você estuda (mapa de calor), foco, sequência e histórico da meta, com filtro de período.
 - **Dashboard**: próxima ação em destaque, horas da semana, meta semanal ajustável,
   sequência de dias, gráfico por dia e histórico recente.
 - **Cursos**: cadastro manual, busca, filtros por status/plataforma/categoria, tags,
@@ -18,11 +19,11 @@ como “em breve” na navegação e entram nas próximas fases (veja `docs/ARQU
 - **Tema claro/escuro** e layout responsivo (barra inferior no celular).
 
 - **Importar da Udemy**: extensão de navegador que lê a página "Meu aprendizado" (você já
-  logado) e cadastra os cursos novos, com prévia antes de salvar. Veja
+  logado) e cadastra os cursos novos, com prévia antes de salvar; também importa módulos e aulas de cada curso (um clique por curso). Veja
   [`docs/IMPORTACAO-UDEMY.md`](docs/IMPORTACAO-UDEMY.md).
 
 Nada depende de API externa (a API de Afiliado da Udemy foi descartada): o acompanhamento é
-manual, e a importação da Udemy só traz a lista de cursos e o progresso que a própria página mostra.
+manual, e a importação da Udemy só traz o que a própria página mostra (cursos, progresso, módulos e aulas).
 
 ## Requisitos
 

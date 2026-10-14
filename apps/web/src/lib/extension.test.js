@@ -54,7 +54,7 @@ describe('content-udemy.js (botão na página da Udemy)', () => {
   });
 
   it('esconde o botão fora de Meus cursos', () => {
-    window.history.pushState({}, '', '/course/x/learn/');
+    window.history.pushState({}, '', '/explore/');
     vi.advanceTimersByTime(1100);
     expect(host()).toBeNull();
   });
@@ -93,16 +93,16 @@ describe('background.js e content-app.js', () => {
       tabs: { create: vi.fn() },
       storage: { session: {
         set: async (o) => Object.assign(store, o),
-        get: async (k) => ({ [k]: store[k] }),
-        remove: async (k) => { delete store[k]; },
+        get: async (keys) => Object.fromEntries([].concat(keys).map((k) => [k, store[k]])),
+        remove: async (keys) => { [].concat(keys).forEach((k) => delete store[k]); },
       } },
     };
     new Function(files['background.js'])();
     const send = (msg) => new Promise((resolve) => { listener(msg, {}, resolve); });
     expect(await send({ type: 'lc-items', items: [{ title: 'A' }] })).toEqual({ ok: true });
     expect(chrome.tabs.create).toHaveBeenCalledWith({ url: `${APP}/importar` });
-    expect(await send({ type: 'lc-get' })).toEqual({ items: [{ title: 'A' }] });
-    expect(await send({ type: 'lc-get' })).toEqual({ items: null });
+    expect(await send({ type: 'lc-get' })).toEqual({ items: [{ title: 'A' }], content: null });
+    expect(await send({ type: 'lc-get' })).toEqual({ items: null, content: null });
   });
 
   it('content-app entrega a lista à página quando ela avisa que está pronta', async () => {
@@ -121,5 +121,96 @@ describe('parseExtensionMessage', () => {
     expect(parseExtensionMessage(ev({ origin: 'https://evil.com' }), 'http://localhost:3000', window)).toBeNull();
     expect(parseExtensionMessage(ev({ source: {} }), 'http://localhost:3000', window)).toBeNull();
     expect(parseExtensionMessage(ev({ data: { type: 'x' } }), 'http://localhost:3000', window)).toBeNull();
+  });
+});
+
+describe('modo "conteúdo do curso" (player)', () => {
+  const player = `
+    <h1 data-purpose="course-header-title">Curso Y</h1>
+    <div data-purpose="section-panel-0">
+      <button aria-expanded="false"><span data-purpose="section-heading">Seção 1: Início</span></button>
+      <ul><li data-purpose="curriculum-item-0-0"><label><input type="checkbox" checked><span>Aula 1</span></label><span>4min</span></li></ul>
+    </div>`;
+  let sendMessage;
+  beforeEach(() => {
+    vi.useFakeTimers();
+    document.documentElement.querySelectorAll('div[style*="fixed"]').forEach((n) => n.remove());
+    document.body.innerHTML = player;
+    sendMessage = vi.fn();
+    globalThis.chrome = { runtime: { sendMessage } };
+    window.history.pushState({}, '', '/course/curso-y/learn/lecture/55');
+    new Function(files['content-udemy.js'])();
+  });
+  const host = () => document.documentElement.querySelector('div[style*="fixed"]');
+  const button = () => host().shadowRoot.querySelector('button');
+
+  it('mostra o botão certo no player e envia seções e aulas ao clicar', async () => {
+    expect(button().textContent).toBe('Importar conteúdo deste curso');
+    const clicks = vi.fn();
+    document.querySelector('button[aria-expanded]').addEventListener('click', clicks);
+    button().click();
+    await vi.advanceTimersByTimeAsync(1500);
+    expect(clicks).toHaveBeenCalledTimes(1); // expandiu a seção recolhida
+    expect(sendMessage).toHaveBeenCalledTimes(1);
+    const msg = sendMessage.mock.calls[0][0];
+    expect(msg.type).toBe('lc-content');
+    expect(msg.content.title).toBe('Curso Y');
+    expect(msg.content.modules).toEqual([{ title: 'Seção 1: Início', lessons: [{ title: 'Aula 1', durationMin: 4, completed: true }] }]);
+  });
+
+  it('sem aulas, copia o diagnóstico da estrutura e não envia', async () => {
+    document.body.innerHTML = '<div data-purpose="curriculum-section-container"><button aria-expanded="true">x</button><input type="checkbox"></div>';
+    const writeText = vi.fn().mockResolvedValue();
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+    button().click();
+    await vi.advanceTimersByTimeAsync(1500);
+    expect(sendMessage).not.toHaveBeenCalled();
+    const d = JSON.parse(writeText.mock.calls[0][0]);
+    expect(d).toMatchObject({ modo: 'player', path: '/course/curso-y/learn/lecture/N', checkboxes: 1, botoesExpansiveis: 1 });
+    expect(d.dataPurposeRelevantes).toEqual([['curriculum-section-container', 1]]);
+  });
+
+  it('o botão volta ao modo "meus cursos" quando a Udemy navega para lá', () => {
+    window.history.pushState({}, '', '/home/my-courses/learning/');
+    vi.advanceTimersByTime(1100);
+    expect(button().textContent).toBe('Importar para o Learning Center');
+  });
+});
+
+describe('background/content-app com conteúdo', () => {
+  it('guarda o conteúdo, abre /importar-conteudo e entrega uma vez', async () => {
+    const store = {};
+    let listener;
+    globalThis.chrome = {
+      runtime: { onMessage: { addListener: (fn) => { listener = fn; } } },
+      tabs: { create: vi.fn() },
+      storage: { session: {
+        set: async (o) => Object.assign(store, o),
+        get: async (keys) => Object.fromEntries([].concat(keys).map((k) => [k, store[k]])),
+        remove: async (keys) => { [].concat(keys).forEach((k) => delete store[k]); },
+      } },
+    };
+    new Function(files['background.js'])();
+    const send = (msg) => new Promise((resolve) => { listener(msg, {}, resolve); });
+    const content = { title: 'C', url: 'u', modules: [] };
+    expect(await send({ type: 'lc-content', content })).toEqual({ ok: true });
+    expect(chrome.tabs.create).toHaveBeenCalledWith({ url: `${APP}/importar-conteudo` });
+    expect(await send({ type: 'lc-get' })).toEqual({ items: null, content });
+    expect(await send({ type: 'lc-get' })).toEqual({ items: null, content: null });
+  });
+
+  it('content-app entrega o conteúdo à página', async () => {
+    const content = { title: 'C', url: 'u', modules: [] };
+    globalThis.chrome = { runtime: { sendMessage: vi.fn().mockResolvedValue({ items: null, content }) } };
+    const spy = vi.spyOn(window, 'postMessage');
+    new Function(files['content-app.js'])();
+    window.dispatchEvent(new MessageEvent('message', { data: { type: 'lc-ready' }, source: window, origin: window.location.origin }));
+    await vi.waitFor(() => expect(spy).toHaveBeenCalledWith({ type: 'lc-content-ext', content }, window.location.origin));
+  });
+
+  it('o manifest cobre /importar-conteudo', () => {
+    const m = JSON.parse(files['manifest.json']);
+    expect('/importar-conteudo'.startsWith('/importar')).toBe(true);
+    expect(m.content_scripts[1].matches[0]).toBe(`${APP}/importar*`);
   });
 });

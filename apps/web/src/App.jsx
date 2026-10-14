@@ -7,6 +7,8 @@ import Dashboard from './pages/Dashboard.jsx';
 import Courses from './pages/Courses.jsx';
 import CourseDetail from './pages/CourseDetail.jsx';
 const ImportUdemy = lazy(() => import('./pages/ImportUdemy.jsx'));
+const ImportContent = lazy(() => import('./pages/ImportContent.jsx'));
+const Analytics = lazy(() => import('./pages/Analytics.jsx'));
 const Focus = lazy(() => import('./pages/Focus.jsx'));
 
 function NotFound() {
@@ -27,6 +29,8 @@ export default function App() {
         <Route path="cursos" element={<Courses />} />
         <Route path="cursos/:id" element={<CourseDetail />} />
         <Route path="importar" element={<Suspense fallback={<Skeleton height={340} />}><ImportUdemy /></Suspense>} />
+        <Route path="importar-conteudo" element={<Suspense fallback={<Skeleton height={340} />}><ImportContent /></Suspense>} />
+        <Route path="analytics" element={<Suspense fallback={<Skeleton height={340} />}><Analytics /></Suspense>} />
         <Route path="foco" element={<Suspense fallback={<Skeleton height={340} />}><Focus /></Suspense>} />
         <Route path="*" element={<NotFound />} />
       </Route>

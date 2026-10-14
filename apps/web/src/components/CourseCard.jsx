@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ProgressBar, StatusBadge } from './ui.jsx';
-import { thumbFor, formatMinutes } from '../lib/format.js';
+import { formatMinutes } from '../lib/format.js';
+import { CourseArt } from './CourseArt.jsx';
 
 export function CourseCard({ course }) {
   const c = course;
@@ -8,9 +9,9 @@ export function CourseCard({ course }) {
   const tone = c.status === 'completed' ? 'green' : '';
   return (
     <article className="card course-card">
-      <div className="course-thumb" style={{ background: thumbFor(c.id) }}>
+      <CourseArt className="course-thumb" id={c.id} imageUrl={c.imageUrl}>
         <span className="plat">{c.platform}</span>
-      </div>
+      </CourseArt>
       <div className="course-body">
         <div>
           <h3><Link to={`/cursos/${c.id}`}>{c.title}</Link></h3>

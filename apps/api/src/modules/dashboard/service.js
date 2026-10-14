@@ -1,4 +1,5 @@
 import { startOfWeek, startOfDay, addDays, dayKey } from '../../core/time.js';
+import { currentStreak } from '../../core/streaks.js';
 
 const WEEKDAYS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
 
@@ -12,14 +13,7 @@ export function createDashboardService({ db, clock, courses, sessions, goals }) 
         .filter((s) => s.duration_sec > 0)
         .map((s) => dayKey(s.started_at)),
     );
-    let cursor = startOfDay(now);
-    if (!days.has(dayKey(cursor))) cursor = addDays(cursor, -1);
-    let count = 0;
-    while (days.has(dayKey(cursor))) {
-      count += 1;
-      cursor = addDays(cursor, -1);
-    }
-    return count;
+    return currentStreak(days, now);
   }
 
   function weeklyChart(weekStart) {

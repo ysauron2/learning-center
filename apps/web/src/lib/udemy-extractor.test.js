@@ -42,6 +42,23 @@ describe('extractUdemyCourses', () => {
     ]);
   });
 
+  it('captura a capa do curso (src, data-src ou srcset), só https', () => {
+    const items = extractUdemyCourses(page(`
+      <div><a href="/course/a/"><img src="https://img-c.udemycdn.com/course/240x135/1_a.jpg" alt=""><h3>Curso A</h3></a></div>
+      <div><a href="/course/b/"><img data-src="https://img-c.udemycdn.com/course/240x135/2_b.jpg"><h3>Curso B</h3></a></div>
+      <div><a href="/course/c/"><img srcset="https://img-c.udemycdn.com/c1.jpg 1x, https://img-c.udemycdn.com/c2.jpg 2x"><h3>Curso C</h3></a></div>
+      <div><a href="/course/d/"><img src="data:image/gif;base64,R0lGOD"><h3>Curso D</h3></a></div>
+      <div><a href="/course/e/"><img src="http://img-c.udemycdn.com/e.jpg"><h3>Curso E</h3></a></div>
+      <div><a href="/course/f/"><h3>Curso F</h3></a></div>`));
+    const by = Object.fromEntries(items.map((i) => [i.title, i.imageUrl]));
+    expect(by['Curso A']).toBe('https://img-c.udemycdn.com/course/240x135/1_a.jpg');
+    expect(by['Curso B']).toBe('https://img-c.udemycdn.com/course/240x135/2_b.jpg');
+    expect(by['Curso C']).toBe('https://img-c.udemycdn.com/c1.jpg');
+    expect(by['Curso D']).toBeUndefined();
+    expect(by['Curso E']).toBeUndefined();
+    expect(by['Curso F']).toBeUndefined();
+  });
+
   it('usa a porcentagem do texto quando não há barra de progresso', () => {
     const items = extractUdemyCourses(page(`
       <section><div><a href="/course/redes/"><h4>Redes de Computadores</h4></a><p>100% concluído</p></div></section>`));

@@ -15,6 +15,7 @@ export function CourseForm({ course, onClose, onSaved }) {
     category: course?.category ?? 'Geral',
     status: course?.status ?? 'active',
     url: course?.url ?? '',
+    imageUrl: course?.imageUrl ?? '',
     description: course?.description ?? '',
     tags: (course?.tags ?? []).join(', '),
     manualProgress: course?.manualProgress ?? 0,
@@ -36,6 +37,7 @@ export function CourseForm({ course, onClose, onSaved }) {
       status: form.status,
       description: form.description,
       url: form.url.trim() || null,
+      imageUrl: form.imageUrl.trim() || null,
       manualProgress: Number(form.manualProgress) || 0,
       tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean),
     };
@@ -96,6 +98,11 @@ export function CourseForm({ course, onClose, onSaved }) {
           <label htmlFor="cf-url">Link do curso (opcional)</label>
           <input id="cf-url" className="input" type="url" value={form.url} onChange={set('url')} placeholder="https://" />
           {fieldError('url') && <span className="error-text">Informe um link válido.</span>}
+        </div>
+        <div className="field">
+          <label htmlFor="cf-img">Imagem de capa (opcional)</label>
+          <input id="cf-img" className="input" type="url" value={form.imageUrl} onChange={set('imageUrl')} placeholder="https://" />
+          {fieldError('imageUrl') && <span className="error-text">Informe um link https de imagem.</span>}
         </div>
         <div className="field">
           <label htmlFor="cf-desc">Descrição (opcional)</label>

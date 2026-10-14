@@ -262,3 +262,29 @@ button { cursor: pointer; }
 .rating { display: flex; gap: 8px; }
 .rating button { flex: 1; min-height: 44px; border-radius: 12px; border: 1px solid var(--border-strong); background: var(--surface); font-weight: 600; }
 .rating button[aria-pressed='true'] { background: var(--brand-soft); border-color: var(--brand); color: var(--brand-text); }
+
+/* Analytics */
+.chart.dense { gap: 3px; }
+.chart.dense .chart-bar { max-width: none; border-radius: 4px; }
+.chart.dense .chart-col span { font-size: 10px; white-space: nowrap; height: 12px; }
+.an-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; margin-bottom: 20px; }
+.an-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.an-wide { grid-column: 1 / -1; }
+@media (max-width: 1080px) { .an-grid { grid-template-columns: 1fr; } }
+.an-list { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 14px; }
+.an-sub { margin: 20px 0 0; font-size: 13px; font-weight: 700; color: var(--text-2); }
+.an-dl { margin: 14px 0; display: grid; gap: 10px; }
+.an-dl div { display: flex; justify-content: space-between; gap: 12px; }
+.an-dl dt { color: var(--text-3); }
+.an-dl dd { margin: 0; font-weight: 700; }
+.an-table { margin-top: 8px; border-collapse: collapse; font-size: 13px; }
+.an-table th, .an-table td { text-align: left; padding: 4px 16px 4px 0; }
+.heat { margin-top: 14px; border-collapse: separate; border-spacing: 4px; width: 100%; table-layout: fixed; }
+.heat th { font-size: 12px; font-weight: 600; color: var(--text-2); text-align: center; }
+.heat th small { display: block; font-weight: 400; color: var(--text-3); }
+.heat tbody th { text-align: left; width: 44px; }
+.heat-cell { height: 30px; border-radius: 6px; background: var(--track); }
+.heat-cell[data-level='1'] { background: color-mix(in srgb, var(--brand) 25%, var(--track)); }
+.heat-cell[data-level='2'] { background: color-mix(in srgb, var(--brand) 50%, var(--track)); }
+.heat-cell[data-level='3'] { background: color-mix(in srgb, var(--brand) 75%, var(--track)); }
+.heat-cell[data-level='4'] { background: var(--brand); }

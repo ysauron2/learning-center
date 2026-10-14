@@ -13,22 +13,27 @@ import { systemClock } from './core/time.js';
 import { errorHandler } from './core/errors.js';
 import { createCoursesService } from './modules/courses/service.js';
 import { createCourseImporter } from './modules/courses/import.js';
+import { createContentImporter } from './modules/courses/import-content.js';
 import { createSessionsService } from './modules/sessions/service.js';
 import { createGoalsService } from './modules/goals/service.js';
 import { createDashboardService } from './modules/dashboard/service.js';
+import { createAnalyticsService } from './modules/analytics/service.js';
 import { coursesRoutes } from './modules/courses/routes.js';
 import { sessionsRoutes } from './modules/sessions/routes.js';
 import { goalsRoutes } from './modules/goals/routes.js';
 import { dashboardRoutes } from './modules/dashboard/routes.js';
+import { analyticsRoutes } from './modules/analytics/routes.js';
 
 export function createLearningCenter({ db, clock = systemClock, runMigrations = true }) {
   if (runMigrations) migrate(db);
   const courses = createCoursesService(db, clock);
   const courseImporter = createCourseImporter(db, courses);
+  const contentImporter = createContentImporter(db, courses);
   const sessions = createSessionsService(db, clock);
   const goals = createGoalsService(db, clock, sessions);
   const dashboard = createDashboardService({ db, clock, courses, sessions, goals });
-  return { courses, courseImporter, sessions, goals, dashboard };
+  const analytics = createAnalyticsService({ db, clock, courses, goals });
+  return { courses, courseImporter, contentImporter, sessions, goals, dashboard, analytics };
 }
 
 /** Plugin Fastify (encapsulado: o error handler vale só dentro do prefixo). */
@@ -40,6 +45,7 @@ export async function registerLearningCenter(app, opts) {
   sessionsRoutes(app, services);
   goalsRoutes(app, services);
   dashboardRoutes(app, services);
+  analyticsRoutes(app, services);
 }
 
 export { migrate } from './core/migrate.js';

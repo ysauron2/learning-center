@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../lib/api.js';
 import { useAsync, useToast } from '../lib/hooks.js';
-import { formatMinutes, relativeDay, thumbFor } from '../lib/format.js';
+import { formatMinutes, relativeDay } from '../lib/format.js';
+import { CourseArt } from '../components/CourseArt.jsx';
 import { Icon } from '../components/Icon.jsx';
 import { CourseForm } from '../components/CourseForm.jsx';
 import { ErrorState, Modal, ProgressBar, Skeleton, StatusBadge, Toast } from '../components/ui.jsx';
@@ -90,7 +91,7 @@ export default function CourseDetail() {
       </nav>
 
       <section className="card detail-head">
-        <div className="detail-art" style={{ background: thumbFor(course.id) }} role="img" aria-label="Capa do curso" />
+        <CourseArt className="detail-art" id={course.id} imageUrl={course.imageUrl} role="img" aria-label="Capa do curso" />
         <div className="detail-info">
           <div className="row" style={{ gap: 8 }}>
             <span className="badge brand">{course.platform}</span>

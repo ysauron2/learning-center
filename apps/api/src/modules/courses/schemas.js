@@ -7,12 +7,16 @@ const tags = z
   .max(10)
   .transform((arr) => [...new Set(arr.map((t) => t.toLowerCase()))]);
 
+/** Só https: evita `javascript:`/`data:` e imagem sem criptografia. */
+export const httpsUrl = z.string().trim().url().max(500).refine((u) => u.startsWith('https://'), 'Use um endereço https.');
+
 export const courseCreate = z.object({
   title: z.string().trim().min(1, 'Informe um título.').max(160),
   platform: z.string().trim().min(1).max(60).default('Outro'),
   category: z.string().trim().min(1).max(60).default('Geral'),
   description: z.string().trim().max(2000).default(''),
   url: z.string().trim().url().max(500).nullish(),
+  imageUrl: httpsUrl.nullish(),
   status: z.enum(STATUSES).default('active'),
   manualProgress: z.number().int().min(0).max(100).default(0),
   tags: tags.default([]),

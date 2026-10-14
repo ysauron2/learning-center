@@ -43,4 +43,23 @@ texto "% concluído"). Com ele dá para ajustar o leitor sem precisar da página
 - A Udemy carrega a lista aos poucos: role até o fim antes de clicar.
 - Ler a página de forma automatizada pode ser contra os termos de uso da Udemy; é uso pessoal e esporádico, por conta do usuário.
 - Se a Udemy mudar o layout, o leitor pode precisar de ajuste.
-- Só adiciona cursos; não atualiza o progresso de cursos já importados.
+- A importação de cursos só adiciona; não atualiza o progresso de cursos já importados. O conteúdo (aulas) pode ser reimportado a qualquer momento para marcar aulas novas como concluídas.
+
+## Importar o conteúdo de um curso (módulos e aulas)
+
+Um clique por curso, no **player**:
+
+1. Abra o curso na Udemy e entre onde você assiste às aulas, com a barra **Conteúdo do curso** visível.
+2. Clique no botão roxo **Importar conteúdo deste curso** (a extensão expande as seções recolhidas sozinha).
+3. O app abre em `/importar-conteudo`, sugere o curso de destino (pelo endereço ou pelo título; se não achar, escolha na lista), mostra a prévia e o progresso resultante e pede confirmação.
+
+Regras: só soma (cria módulos/aulas que faltam, preenche duração zerada, marca como concluída); nunca apaga, renomeia nem desmarca. Importar de novo não duplica. Depois da importação o progresso do curso passa a ser calculado pelas aulas concluídas.
+
+O leitor (`apps/web/src/lib/udemy-curriculum.js`) não depende de classes do site: usa `data-purpose`, as caixas de "aula vista" e a ordem dos elementos (cabeçalho de seção → aulas). Se não achar aulas, o botão copia um diagnóstico da estrutura da barra para a área de transferência.
+
+## Capas dos cursos
+
+A extensão lê também a imagem de capa de cada cartão de "Meus cursos". O app guarda só o **endereço** (https, da Udemy) e o navegador carrega a imagem direto da Udemy ao exibir o curso; se falhar, aparece o degradê padrão. Consequências: a Udemy vê essas requisições de imagem (sem enviar o endereço do app como origem) e a capa some se a Udemy mudar ou apagar a imagem.
+
+- Cursos já cadastrados sem capa ganham uma ao reimportar em "Meus cursos" (nunca trocamos uma capa existente).
+- Também dá para definir ou limpar a capa manualmente em "Editar curso" (campo "Imagem de capa", só https).

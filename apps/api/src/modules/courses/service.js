@@ -40,6 +40,7 @@ export function createCoursesService(db, clock) {
       category: row.category,
       description: row.description,
       url: row.url,
+      imageUrl: row.image_url ?? null,
       status: row.status,
       progress,
       manualProgress: row.manual_progress,
@@ -153,8 +154,8 @@ export function createCoursesService(db, clock) {
     return transaction(db, () => {
       const res = db
         .prepare(
-          `INSERT INTO lc_courses (title, platform, category, description, url, status, manual_progress, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO lc_courses (title, platform, category, description, url, image_url, status, manual_progress, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
         .run(
           input.title,
@@ -162,6 +163,7 @@ export function createCoursesService(db, clock) {
           input.category,
           input.description,
           input.url ?? null,
+          input.imageUrl ?? null,
           input.status,
           input.status === 'completed' ? 100 : input.manualProgress,
           now,
@@ -182,6 +184,7 @@ export function createCoursesService(db, clock) {
       category: 'category',
       description: 'description',
       url: 'url',
+      imageUrl: 'image_url',
       status: 'status',
       manualProgress: 'manual_progress',
     };
@@ -190,7 +193,7 @@ export function createCoursesService(db, clock) {
     for (const [key, column] of Object.entries(map)) {
       if (input[key] !== undefined) {
         sets.push(`${column} = ?`);
-        params.push(key === 'url' ? (input[key] ?? null) : input[key]);
+        params.push(key === 'url' || key === 'imageUrl' ? (input[key] ?? null) : input[key]);
       }
     }
     return transaction(db, () => {

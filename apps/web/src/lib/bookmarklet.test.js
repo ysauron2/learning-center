@@ -60,6 +60,12 @@ describe('parseImportMessage', () => {
     expect(parseImportMessage(ev('http://www.udemy.com', ok))).toBeNull();
   });
 
+  it('mantém a capa (imageUrl) e o instrutor quando vierem como texto', () => {
+    const r = parseImportMessage(ev('https://www.udemy.com', { type: 'lc-import', items: [{ title: 'A', url: 'u', progress: 1, imageUrl: 'https://img-c.udemycdn.com/a.jpg', instructor: 'M' }, { title: 'B', url: 'u', imageUrl: 5 }] }));
+    expect(r[0]).toEqual({ title: 'A', url: 'u', progress: 1, instructor: 'M', imageUrl: 'https://img-c.udemycdn.com/a.jpg' });
+    expect(r[1]).toEqual({ title: 'B', url: 'u', progress: 0 });
+  });
+
   it('descarta formatos inválidos e itens malformados', () => {
     expect(parseImportMessage(ev('https://www.udemy.com', { type: 'outro', items: [] }))).toBeNull();
     expect(parseImportMessage(ev('https://www.udemy.com', { type: 'lc-import', items: 'x' }))).toBeNull();

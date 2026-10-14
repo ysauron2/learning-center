@@ -65,6 +65,13 @@ export function extractUdemyCourses(doc) {
     const instructor = inst ? clean(inst.textContent).slice(0, 120) : '';
     const item = { title: title.slice(0, 160), url: e.url, progress };
     if (instructor) item.instructor = instructor;
+    // Capa: primeira imagem do cartão (src, carregamento tardio ou srcset). Só https.
+    const img = e.card.querySelector('img');
+    if (img) {
+      const srcset = (img.getAttribute('srcset') || '').split(',')[0].trim().split(/\s+/)[0];
+      const raw = img.currentSrc || img.getAttribute('src') || img.getAttribute('data-src') || srcset || '';
+      if (/^https:\/\//i.test(raw) && raw.length <= 500) item.imageUrl = raw;
+    }
     items.push(item);
   }
   return items;

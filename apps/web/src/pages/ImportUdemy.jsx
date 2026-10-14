@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../lib/api.js';
 import { buildBookmarklet, parseImportMessage, parseExtensionMessage } from '../lib/bookmarklet.js';
+import { hasWork, confirmLabel } from '../lib/import-preview.js';
 import { ErrorState, ProgressBar } from '../components/ui.jsx';
 
 export default function ImportUdemy() {
@@ -58,7 +59,10 @@ export default function ImportUdemy() {
           <h1 className="page-title">Importar da Udemy</h1>
           <p className="page-sub">Traga seus cursos de uma vez, sem digitar. Você confere antes de salvar.</p>
         </div>
-        <Link className="btn" to="/cursos">Voltar</Link>
+        <div className="row" style={{ gap: 8 }}>
+          <Link className="btn" to="/importar-conteudo">Importar conteúdo de um curso</Link>
+          <Link className="btn" to="/cursos">Voltar</Link>
+        </div>
       </header>
 
       {error && <ErrorState error={error} />}
@@ -66,7 +70,7 @@ export default function ImportUdemy() {
       {result && (
         <section className="card" role="status" aria-live="polite">
           <h2 className="card-title">Pronto!</h2>
-          <p>{result.created} curso(s) importado(s){result.skipped ? `, ${result.skipped} já existia(m)` : ''}.</p>
+          <p>{result.created} curso(s) importado(s){result.skipped ? `, ${result.skipped} já existia(m)` : ''}{result.imagesFilled ? `, ${result.imagesFilled} capa(s) preenchida(s)` : ''}.</p>
           <Link className="btn btn-primary" to="/cursos" style={{ marginTop: 12 }}>Ver meus cursos</Link>
         </section>
       )}
@@ -77,20 +81,21 @@ export default function ImportUdemy() {
           <p className="page-sub">
             {preview.new.length} novo(s) · {preview.existing.length} já cadastrado(s) (serão ignorados)
             {preview.invalid.length ? ` · ${preview.invalid.length} ignorado(s) por link inválido` : ''}
+            {preview.imagesToFill ? ` · ${preview.imagesToFill} capa(s) serão preenchidas em cursos já cadastrados` : ''}
           </p>
           {preview.new.length > 0 && (
             <ul className="list" style={{ margin: '12px 0', padding: 0, listStyle: 'none' }}>
               {preview.new.map((c) => (
                 <li key={c.url} style={{ padding: '8px 0', borderBottom: '1px solid var(--border, #e5e5e5)' }}>
-                  <strong>{c.title}</strong>
+                  <strong>{c.title}</strong>{c.hasImage ? '' : <span className="muted" style={{ fontSize: 12 }}> · sem capa</span>}
                   <ProgressBar value={c.progress} label={`Progresso de ${c.title}`} />
                 </li>
               ))}
             </ul>
           )}
           <div className="row" style={{ gap: 8 }}>
-            <button className="btn btn-primary" disabled={busy || preview.new.length === 0} onClick={confirm}>
-              {busy ? 'Importando…' : `Importar ${preview.new.length} curso(s)`}
+            <button className="btn btn-primary" disabled={busy || !hasWork(preview)} onClick={confirm}>
+              {busy ? 'Importando…' : confirmLabel(preview)}
             </button>
             <button className="btn" disabled={busy} onClick={() => { setPreview(null); setItems(null); }}>Cancelar</button>
           </div>

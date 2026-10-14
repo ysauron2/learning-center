@@ -10,13 +10,15 @@ const src = (p) => readFileSync(resolve(root, 'apps/extension/src', p), 'utf8');
 /** Devolve { arquivo: conteúdo } sem gravar nada (também usado nos testes). */
 export function buildFiles(appOrigin = 'http://localhost:3000') {
   const origin = new URL(appOrigin).origin;
-  const extractor = readFileSync(resolve(root, 'apps/web/src/lib/udemy-extractor.js'), 'utf8').replace(/^export /m, '');
+  const lib = (name) => readFileSync(resolve(root, 'apps/web/src/lib', name), 'utf8').replace(/^export /m, '');
   const lit = JSON.stringify(origin);
   return {
     'manifest.json': src('manifest.json').replaceAll('__APP_ORIGIN__', origin),
     'background.js': src('background.js').replaceAll('__APP_ORIGIN__', lit),
     'content-app.js': src('content-app.js'),
-    'content-udemy.js': src('content-udemy.js').replace('/*__EXTRACTOR__*/', () => extractor),
+    'content-udemy.js': src('content-udemy.js')
+      .replace('/*__EXTRACTOR__*/', () => lib('udemy-extractor.js'))
+      .replace('/*__CURRICULUM__*/', () => lib('udemy-curriculum.js')),
   };
 }
 

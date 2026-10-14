@@ -45,6 +45,7 @@ export function parseImportMessage(event) {
       url: i.url,
       progress: Number.isFinite(i.progress) ? i.progress : 0,
       ...(typeof i.instructor === 'string' && i.instructor ? { instructor: i.instructor } : {}),
+      ...(typeof i.imageUrl === 'string' && i.imageUrl ? { imageUrl: i.imageUrl } : {}),
     }));
   return items.length ? items : null;
 }

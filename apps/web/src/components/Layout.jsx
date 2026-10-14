@@ -6,13 +6,13 @@ const ACTIVE = [
   { to: '/', label: 'Learning Center', icon: 'book', end: true },
   { to: '/cursos', label: 'Cursos', icon: 'courses' },
   { to: '/foco', label: 'Sessões de foco', icon: 'timer' },
+  { to: '/analytics', label: 'Analytics', icon: 'chart' },
 ];
 const SOON = [
   { label: 'Trilhas', icon: 'route' },
   { label: 'Certificações', icon: 'award' },
   { label: 'Anotações', icon: 'note' },
   { label: 'Laboratórios', icon: 'flask' },
-  { label: 'Analytics', icon: 'chart' },
   { label: 'Tutor IA', icon: 'sparkle' },
 ];
 
@@ -52,6 +52,7 @@ export function Layout() {
         <NavLink to="/" end className={({ isActive }) => (isActive ? 'active' : '')}><Icon name="home" size={22} />Início</NavLink>
         <NavLink to="/cursos" className={({ isActive }) => (isActive ? 'active' : '')}><Icon name="courses" size={22} />Cursos</NavLink>
         <NavLink to="/foco" className={({ isActive }) => (isActive ? 'active' : '')}><Icon name="timer" size={22} />Foco</NavLink>
+        <NavLink to="/analytics" className={({ isActive }) => (isActive ? 'active' : '')}><Icon name="chart" size={22} />Analytics</NavLink>
         <button onClick={toggleTheme} aria-label={themeLabel}><Icon name={theme === 'dark' ? 'sun' : 'moon'} size={22} />Tema</button>
       </nav>
     </div>

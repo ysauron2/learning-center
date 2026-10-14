@@ -46,6 +46,8 @@ export const api = {
   setCourseStatus: (id, status) => request('POST', `/courses/${id}/status`, { status }),
   importPreview: (items) => request('POST', '/courses/import/preview', { items }),
   importCourses: (items) => request('POST', '/courses/import', { items }),
+  importContentPreview: (id, modules) => request('POST', `/courses/${id}/import-content/preview`, { modules }),
+  importContent: (id, modules) => request('POST', `/courses/${id}/import-content`, { modules }),
   deleteCourse: (id) => request('DELETE', `/courses/${id}`),
   addModule: (courseId, title) => request('POST', `/courses/${courseId}/modules`, { title }),
   deleteModule: (id) => request('DELETE', `/modules/${id}`),
@@ -60,6 +62,7 @@ export const api = {
   finishSession: (id, data) => request('POST', `/sessions/${id}/finish`, data),
   discardSession: (id) => request('DELETE', `/sessions/${id}`),
   logManual: (data) => request('POST', '/sessions/manual', data),
+  analytics: (range = '30d') => request('GET', `/analytics?range=${range}`),
   weeklyGoal: () => request('GET', '/goals/weekly'),
   setWeeklyGoal: (targetMinutes) => request('PUT', '/goals/weekly', { targetMinutes }),
 };

@@ -4,13 +4,14 @@ import {
   moduleCreate, lessonCreate, lessonUpdate,
 } from './schemas.js';
 import { importBody } from './import.js';
+import { contentBody } from './import-content.js';
 
 function intParam(req) {
   const id = Number.parseInt(req.params.id, 10);
   return Number.isInteger(id) && id > 0 ? id : -1;
 }
 
-export function coursesRoutes(app, { courses, courseImporter }) {
+export function coursesRoutes(app, { courses, courseImporter, contentImporter }) {
   app.get('/courses', async (req) => ({ data: courses.list(parse(courseQuery, req.query)) }));
   app.get('/courses/summary', async () => ({ data: courses.summary() }));
   app.post('/courses', async (req, reply) => {
@@ -19,6 +20,8 @@ export function coursesRoutes(app, { courses, courseImporter }) {
   });
   app.post('/courses/import/preview', async (req) => ({ data: courseImporter.preview(parse(importBody, req.body)) }));
   app.post('/courses/import', async (req) => ({ data: courseImporter.run(parse(importBody, req.body)) }));
+  app.post('/courses/:id/import-content/preview', async (req) => ({ data: contentImporter.preview(intParam(req), parse(contentBody, req.body)) }));
+  app.post('/courses/:id/import-content', async (req) => ({ data: contentImporter.run(intParam(req), parse(contentBody, req.body)) }));
   app.get('/courses/:id', async (req) => ({ data: courses.get(intParam(req)) }));
   app.patch('/courses/:id', async (req) => ({ data: courses.update(intParam(req), parse(courseUpdate, req.body)) }));
   app.post('/courses/:id/status', async (req) => ({

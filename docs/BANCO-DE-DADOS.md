@@ -11,6 +11,7 @@ Datas são texto ISO 8601 em UTC.
 ## Tabelas
 
 **lc_courses** — `id`, `title`, `platform`, `category`, `description`, `url`,
+`image_url` (capa, https; nulo = degradê padrão; migração `002`),
 `status` (`planned|active|paused|completed`), `manual_progress` (0–100),
 `created_at`, `updated_at`.
 
