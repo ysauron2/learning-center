@@ -113,3 +113,18 @@ describe('Início · ferramentas rápidas', () => {
     expect(headings()).toContain('Anotação rápida');
   });
 });
+
+describe('Início · aviso de versão nova', () => {
+  it('mostra o cartão quando o app de desktop informa versão nova, antes do resto', async () => {
+    api.dashboard.mockResolvedValue(dash({ id: 5, title: 'Cyber Security', progress: 10, imageUrl: null }));
+    window.lcDesktop = { isDesktop: true, updateState: vi.fn().mockResolvedValue({ status: 'available', current: '0.1.1', platform: 'win32', version: '0.2.0', notes: '', pageUrl: 'https://github.com/ysauron2/learning-center/releases/tag/v0.2.0' }), installUpdate: vi.fn() };
+    try {
+      await mount();
+      expect(container.textContent).toContain('Lume 0.2.0 disponível');
+      const html = container.innerHTML;
+      expect(html.indexOf('update-card')).toBeLessThan(html.indexOf('hero'));
+    } finally {
+      delete window.lcDesktop;
+    }
+  });
+});

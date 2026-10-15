@@ -20,6 +20,11 @@ describe('preloads gerados', () => {
     expect(files['preload-udemy.cjs']).toContain('extractUdemyCurriculum');
     expect(files['preload-app.cjs']).not.toContain('extractUdemyCourses');
     expect(files['preload-app.cjs']).toContain("exposeInMainWorld('lcDesktop'");
+    expect(files['preload-app.cjs']).toContain("type: 'update-state'");
+    expect(files['preload-app.cjs']).toContain("type: 'update-install'");
+    for (const other of ['preload-udemy.cjs', 'preload-alura.cjs', 'preload-bradesco.cjs']) {
+      expect(files[other], other).not.toContain('update-install');
+    }
   });
 });
 

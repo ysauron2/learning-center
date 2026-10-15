@@ -54,10 +54,12 @@ const ALLOWED = {
   'lc-get': 'app',
   'open-udemy': 'app',
   'open-platform': 'app',
+  'update-state': 'app',
+  'update-install': 'app',
 };
 const bad = { ok: false, reason: 'bad-request' };
 
-export function createBridge({ apiBase, fetchImpl = fetch, settings, saveSettings, openAppPage, openUdemy = () => {}, openPlatform = () => {} }) {
+export function createBridge({ apiBase, fetchImpl = fetch, settings, saveSettings, openAppPage, openUdemy = () => {}, openPlatform = () => {}, getUpdates = () => null }) {
   const pending = { items: null, content: null, platform: 'udemy' };
 
   async function callApi(path, body) {
@@ -125,6 +127,15 @@ export function createBridge({ apiBase, fetchImpl = fetch, settings, saveSetting
         if (typeof msg.platform !== 'string' || !PLATFORM_IDS.includes(msg.platform)) return bad;
         openPlatform(msg.platform);
         return { ok: true };
+      case 'update-state': {
+        const updates = getUpdates();
+        if (!updates) return { status: 'disabled' };
+        return msg.refresh === true ? updates.refresh() : updates.peek();
+      }
+      case 'update-install': {
+        const updates = getUpdates();
+        return updates ? updates.install() : { status: 'none' };
+      }
       default:
         return { ok: false, reason: 'unknown' };
     }

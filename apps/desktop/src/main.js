@@ -212,6 +212,7 @@ if (!app.requestSingleInstanceLock()) {
       openAppPage,
       openUdemy,
       openPlatform,
+      getUpdates: () => updates,
     });
 
     // Só aceita mensagens do quadro principal de cada janela e confere o endereço de quem enviou.

@@ -42,6 +42,8 @@ São separados do modo navegador (`data/learning-center.db`). Para levar os dado
 
 O Lume (instalado) consulta sozinho, 15 segundos depois de abrir e a cada 6 horas, a última versão publicada em **Releases** do repositório (`ysauron2/learning-center`). Se houver uma mais nova, aparece uma janelinha: **"Nova versão do Lume"**, com as novidades e os botões **Atualizar agora** e **Depois**. "Depois" silencia aquela versão por 24 horas (uma versão ainda mais nova avisa de novo). Se a internet falhar ou o GitHub não responder, nada aparece: ele tenta de novo no próximo ciclo. Também dá para pedir na hora em **Lume → Verificar atualizações…** (esse sempre responde).
 
+**Cartão no Início.** Além da janelinha, a tela **Início** mostra no topo um cartão **"🚀 Lume X.Y.Z disponível"** (você está na versão A.B.C), com **Atualizar agora**, **Depois** (esconde aquela versão por 24 h; versão mais nova volta a aparecer) e **Ver novidades**. O botão faz o mesmo que o da janelinha (Windows: baixa e pede para reiniciar; Mac: abre a página de download). O cartão pergunta ao app no máximo uma vez a cada 10 minutos e some se não há versão nova ou a internet falhou. Só aparece no app instalado (no navegador, não há o que atualizar). A conversa passa pela ponte do app (`update-state` e `update-install`, aceitas só da janela do próprio app).
+
 | | Windows | Mac |
 |---|---|---|
 | "Atualizar agora" | Baixa a versão nova dentro do app (barra de progresso no ícone da barra de tarefas), pergunta **"Reiniciar agora para instalar?"** e instala. Se der erro, mostra uma mensagem e oferece abrir a página de download. | Abre no navegador a página de download. Baixe o arquivo do seu Mac e arraste para *Aplicativos*. |

@@ -176,6 +176,9 @@ export function createUpdateController({
 }) {
   let busy = false;
   let progressWired = false;
+  let state = { status: 'unknown' }; // 'unknown' | 'disabled' | 'current' | 'available' | 'error'
+  let checkedAt = 0;
+  const STATE_FRESH_MS = 10 * 60 * 1000;
   let firstTimer = null;
   let loopTimer = null;
 
@@ -239,6 +242,47 @@ export function createUpdateController({
     await openAllowed(RELEASES_PAGE);
   }
 
+  /** O que o cartão do Início pode ver (nunca devolve nada além de textos e endereços já validados). */
+  function peek() {
+    if (state.status === 'available') {
+      const { release } = state;
+      return { status: 'available', current: currentVersion, platform, version: release.version, notes: release.notes ?? '', pageUrl: release.pageUrl };
+    }
+    return { status: state.status, current: currentVersion };
+  }
+
+  function remember(result) {
+    checkedAt = now();
+    if (result.status === 'available') state = { status: 'available', release: result.release };
+    else if (result.status === 'current') state = { status: 'current' };
+    else if (state.status !== 'available') state = { status: 'error' }; // erro não apaga um aviso já conhecido
+  }
+
+  /** Consulta em silêncio (sem janelinhas) para o cartão do Início; no máximo uma ida ao GitHub a cada 10 minutos. */
+  async function refresh() {
+    if (!enabled) { state = { status: 'disabled' }; return peek(); }
+    if (busy || (state.status !== 'unknown' && now() - checkedAt < STATE_FRESH_MS)) return peek();
+    busy = true;
+    try {
+      remember(await checkForUpdate({ fetch: fetchFn, currentVersion, platform, arch, setTimeoutFn, clearTimeoutFn, log }));
+    } finally {
+      busy = false;
+    }
+    return peek();
+  }
+
+  /** Clique em "Atualizar agora" no cartão: dispara e responde na hora (o resto acontece em segundo plano). */
+  function install() {
+    if (!enabled || state.status !== 'available') return { status: 'none' };
+    if (busy) return { status: 'busy' };
+    const { release } = state;
+    busy = true;
+    updateNow(release)
+      .catch((error) => log(`[atualização] ${error?.message ?? error}`))
+      .finally(() => { busy = false; });
+    return { status: 'started', platform };
+  }
+
   /** `manual`: vindo do menu — sempre responde e ignora o “Depois”. */
   async function checkNow({ manual = false } = {}) {
     if (busy) return { status: 'busy' };
@@ -252,6 +296,7 @@ export function createUpdateController({
     busy = true;
     try {
       const result = await checkForUpdate({ fetch: fetchFn, currentVersion, platform, arch, setTimeoutFn, clearTimeoutFn, log });
+      remember(result);
       if (result.status === 'error') {
         if (manual) await ask({ title: 'Atualizações', message: 'Não consegui verificar agora. Tente de novo mais tarde.', buttons: ['OK'] });
         return result;
@@ -292,5 +337,5 @@ export function createUpdateController({
     loopTimer = null;
   }
 
-  return { start, stop, checkNow };
+  return { start, stop, checkNow, peek, refresh, install };
 }

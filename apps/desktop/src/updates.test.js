@@ -335,3 +335,75 @@ describe('controlador — agenda', () => {
     expect(timers.every((t) => t.cleared)).toBe(true);
   });
 });
+
+describe('estado para o cartão do Início', () => {
+  it('antes de verificar o estado é desconhecido; refresh acha a versão nova sem abrir janelinha', async () => {
+    const { controller, calls } = setup();
+    expect(controller.peek()).toEqual({ status: 'unknown', current: '0.1.0' });
+    const s = await controller.refresh();
+    expect(s).toMatchObject({ status: 'available', current: '0.1.0', platform: 'win32', version: expect.any(String), pageUrl: expect.stringContaining('github.com/ysauron2/learning-center/') });
+    expect(calls.dialogs).toHaveLength(0);
+    expect(controller.peek().status).toBe('available');
+  });
+
+  it('refresh fica em cache por 10 minutos (não consulta o GitHub toda hora)', async () => {
+    let t = 5_000_000;
+    const fetch = vi.fn(async () => okResponse(fixture));
+    const { controller } = setup({ deps: { fetch, now: () => t } });
+    await controller.refresh();
+    await controller.refresh();
+    expect(fetch).toHaveBeenCalledTimes(1);
+    t += 11 * 60 * 1000;
+    await controller.refresh();
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('sem versão nova: "current"; erro de rede: "error", e erro não apaga um aviso já conhecido', async () => {
+    const same = setup({ deps: { currentVersion: '99.0.0' } });
+    expect((await same.controller.refresh()).status).toBe('current');
+    let fail = false;
+    let t = 5_000_000;
+    const { controller } = setup({ deps: { fetch: async () => (fail ? failResponse(500) : okResponse(fixture)), now: () => t } });
+    expect((await controller.refresh()).status).toBe('available');
+    fail = true;
+    t += 11 * 60 * 1000;
+    expect((await controller.refresh()).status).toBe('available');
+    const broken = setup({ deps: { fetch: async () => failResponse(404) } });
+    expect((await broken.controller.refresh()).status).toBe('error');
+  });
+
+  it('desativado (não instalado/teste): "disabled" e nunca consulta', async () => {
+    const fetch = vi.fn();
+    const { controller } = setup({ deps: { enabled: false, fetch } });
+    expect((await controller.refresh()).status).toBe('disabled');
+    expect(controller.install()).toEqual({ status: 'none' });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it('a verificação normal (com janelinha) também atualiza o estado', async () => {
+    const { controller } = setup({ answers: [1] });
+    await controller.checkNow();
+    expect(controller.peek().status).toBe('available');
+  });
+
+  it('install sem versão conhecida não faz nada; no Mac abre a página e responde na hora', async () => {
+    const mac = setup({ deps: { platform: 'darwin' } });
+    expect(mac.controller.install()).toEqual({ status: 'none' });
+    await mac.controller.refresh();
+    expect(mac.controller.install()).toEqual({ status: 'started', platform: 'darwin' });
+    await new Promise((r) => setTimeout(r, 0));
+    await new Promise((r) => setTimeout(r, 0));
+    expect(mac.calls.links).toEqual([RELEASES_PAGE]);
+  });
+
+  it('install no Windows baixa pelo atualizador e não dispara duas vezes ao mesmo tempo', async () => {
+    const updater = fakeUpdater();
+    const { controller } = setup({ deps: { updater }, answers: [1] });
+    await controller.refresh();
+    expect(controller.install().status).toBe('started');
+    expect(controller.install().status).toBe('busy');
+    await new Promise((r) => setTimeout(r, 0));
+    await new Promise((r) => setTimeout(r, 0));
+    expect(updater.downloadUpdate).toHaveBeenCalledTimes(1);
+  });
+});

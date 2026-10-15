@@ -6,6 +6,7 @@ import { formatMinutes, relativeDay, greeting } from '../lib/format.js';
 import { Icon } from '../components/Icon.jsx';
 import { CourseForm } from '../components/CourseForm.jsx';
 import { CourseArt } from '../components/CourseArt.jsx';
+import { UpdateCard } from '../components/UpdateCard.jsx';
 import { AgendaCard } from '../components/AgendaCard.jsx';
 import { Isolated } from '../components/Isolated.jsx';
 import { MissedBlocks } from '../components/MissedBlocks.jsx';
@@ -116,6 +117,8 @@ export default function Dashboard() {
         <h1 className="page-title">{greeting()}! Vamos continuar?</h1>
         <p className="page-sub">Disciplina hoje, resultados amanhã. Sua próxima ação já está pronta.</p>
       </header>
+
+      <UpdateCard />
 
       <div className="dash-top">
         <NextAction action={nextAction} onAddCourse={() => setAdding(true)} />

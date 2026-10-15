@@ -248,3 +248,27 @@ describe('plataformas: Alura e Fundação Bradesco', () => {
     expect(desk.bradesco.home).toBe(api.bradesco.myCoursesUrl);
   });
 });
+
+describe('ponte: estado de atualização do cartão do Início', () => {
+  const mk = (updates) => createBridge({ apiBase: 'http://x', settings: {}, saveSettings: () => {}, openAppPage: () => {}, getUpdates: () => updates });
+
+  it('só a janela do app consulta e instala', async () => {
+    const updates = { peek: vi.fn(() => ({ status: 'available' })), refresh: vi.fn(async () => ({ status: 'current' })), install: vi.fn(() => ({ status: 'started' })) };
+    const bridge = mk(updates);
+    for (const kind of ['udemy', 'alura', 'bradesco', null]) {
+      expect(await bridge.handle({ type: 'update-state' }, kind)).toEqual({ ok: false, reason: 'forbidden' });
+      expect(await bridge.handle({ type: 'update-install' }, kind)).toEqual({ ok: false, reason: 'forbidden' });
+    }
+    expect(updates.install).not.toHaveBeenCalled();
+    expect(await bridge.handle({ type: 'update-state' }, 'app')).toEqual({ status: 'available' });
+    expect(await bridge.handle({ type: 'update-state', refresh: true }, 'app')).toEqual({ status: 'current' });
+    expect(await bridge.handle({ type: 'update-state', refresh: 'sim' }, 'app')).toEqual({ status: 'available' });
+    expect(await bridge.handle({ type: 'update-install' }, 'app')).toEqual({ status: 'started' });
+  });
+
+  it('sem controlador (modo de teste) responde "disabled"/"none"', async () => {
+    const bridge = mk(null);
+    expect(await bridge.handle({ type: 'update-state', refresh: true }, 'app')).toEqual({ status: 'disabled' });
+    expect(await bridge.handle({ type: 'update-install' }, 'app')).toEqual({ status: 'none' });
+  });
+});

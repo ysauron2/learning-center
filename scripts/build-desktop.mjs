@@ -36,6 +36,8 @@ contextBridge.exposeInMainWorld('lcDesktop', {
   isDesktop: true,
   openUdemy: () => ipcRenderer.invoke('lc-msg', { type: 'open-udemy' }),
   openPlatform: (id) => ipcRenderer.invoke('lc-msg', { type: 'open-platform', platform: String(id) }),
+  updateState: (refresh) => ipcRenderer.invoke('lc-msg', { type: 'update-state', refresh: refresh === true }),
+  installUpdate: () => ipcRenderer.invoke('lc-msg', { type: 'update-install' }),
 });
 ${f['content-app.js']}
 `;
