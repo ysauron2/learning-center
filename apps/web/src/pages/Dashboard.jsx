@@ -5,6 +5,7 @@ import { useAsync, useToast } from '../lib/hooks.js';
 import { formatMinutes, relativeDay, greeting } from '../lib/format.js';
 import { Icon } from '../components/Icon.jsx';
 import { CourseForm } from '../components/CourseForm.jsx';
+import { CourseArt } from '../components/CourseArt.jsx';
 import { AgendaCard } from '../components/AgendaCard.jsx';
 import { EmptyState, ErrorState, Modal, ProgressBar, Skeleton, Toast } from '../components/ui.jsx';
 
@@ -27,7 +28,7 @@ function NextAction({ action, onAddCourse }) {
   const href = isResume ? '/foco' : `/foco?${params}`;
   return (
     <section className="hero" aria-label="Próxima ação">
-      <div className="hero-art" role="img" aria-label="Ilustração do curso" />
+      <CourseArt id={course?.id} imageUrl={course?.imageUrl} className="hero-art" role="img" aria-label={course ? `Capa do curso ${course.title}` : 'Ilustração do curso'} />
       <div className="hero-body">
         <span className="eyebrow">{isResume ? 'Sessão em andamento' : 'Próxima ação · hoje'}</span>
         <h2>{course?.title ?? 'Sessão livre'}</h2>

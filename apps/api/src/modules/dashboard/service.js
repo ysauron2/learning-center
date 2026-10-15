@@ -36,7 +36,7 @@ export function createDashboardService({ db, clock, courses, sessions, goals }) 
       return {
         type: 'resume_session',
         session: running,
-        course: course && { id: course.id, title: course.title, progress: course.progress },
+        course: course && { id: course.id, title: course.title, progress: course.progress, imageUrl: course.imageUrl },
         lesson: running.lessonId ? { id: running.lessonId, title: running.lessonTitle } : null,
       };
     }
@@ -53,7 +53,7 @@ export function createDashboardService({ db, clock, courses, sessions, goals }) 
     const lesson = courses.nextLesson(candidate);
     return {
       type: lesson ? 'next_lesson' : 'continue_course',
-      course: { id: course.id, title: course.title, progress: course.progress, platform: course.platform },
+      course: { id: course.id, title: course.title, progress: course.progress, platform: course.platform, imageUrl: course.imageUrl },
       lesson,
     };
   }

@@ -93,6 +93,22 @@ describe('dashboard', () => {
     expect(d.week.deltaPercent).toBeNull();
   });
 
+  it('a próxima ação leva a capa do curso (imageUrl), tanto na sugestão quanto na sessão em andamento', async () => {
+    const c = (await ctx.call('POST', '/courses', { title: 'Redes', platform: 'Udemy', imageUrl: 'https://img-c.udemycdn.com/course/480x270/1_a.jpg' })).body.data;
+    const m = (await ctx.call('POST', `/courses/${c.id}/modules`, { title: 'M1' })).body.data;
+    await ctx.call('POST', `/modules/${m.id}/lessons`, { title: 'Aula 1', durationMin: 20 });
+    expect((await ctx.call('GET', '/dashboard')).body.data.nextAction.course.imageUrl).toBe('https://img-c.udemycdn.com/course/480x270/1_a.jpg');
+    await ctx.call('POST', '/sessions/start', { courseId: c.id });
+    const running = (await ctx.call('GET', '/dashboard')).body.data.nextAction;
+    expect(running.type).toBe('resume_session');
+    expect(running.course.imageUrl).toBe('https://img-c.udemycdn.com/course/480x270/1_a.jpg');
+  });
+
+  it('curso sem capa devolve imageUrl nulo', async () => {
+    await courseWithLesson();
+    expect((await ctx.call('GET', '/dashboard')).body.data.nextAction.course.imageUrl).toBeNull();
+  });
+
   it('sugere a próxima aula do curso ativo e depois a sessão em andamento', async () => {
     const { c, l } = await courseWithLesson();
     const d1 = (await ctx.call('GET', '/dashboard')).body.data;
