@@ -30,7 +30,7 @@ describe('menu lateral', () => {
     await mount();
     const links = linkTexts(side());
     expect(links).toEqual(expect.arrayContaining([
-      ['Learning Center', '/'], ['Cursos', '/cursos'], ['Trilhas', '/trilhas'], ['Sessões de foco', '/foco'],
+      ['Início', '/'], ['Cursos', '/cursos'], ['Trilhas', '/trilhas'], ['Sessões de foco', '/foco'],
       ['Anotações', '/anotacoes'], ['Analytics', '/analytics'], ['Agenda', '/agenda'], ['Backup', '/backup'],
     ]));
     expect(side().textContent).not.toContain('Laboratórios');

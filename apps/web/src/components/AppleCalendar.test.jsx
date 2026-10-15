@@ -51,7 +51,7 @@ describe('AppleCalendar', () => {
 
   it('avisa a limitação: só enquanto o app está aberto, e o Google não assina', async () => {
     await mount(<AppleCalendar />);
-    expect(container.textContent).toContain('enquanto o Learning Center estiver aberto');
+    expect(container.textContent).toContain('enquanto o Lume estiver aberto');
     expect(container.textContent).toContain('Google Agenda não consegue assinar');
   });
 });

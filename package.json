@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Meu Hub — Learning Center: plataforma pessoal de estudos (MVP)",
+  "description": "Lume: plataforma pessoal de estudos",
   "engines": {
     "node": ">=22.13"
   },

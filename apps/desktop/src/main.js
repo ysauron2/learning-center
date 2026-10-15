@@ -48,7 +48,7 @@ function createMainWindow() {
     width: 1280,
     height: 860,
     minWidth: 380,
-    title: 'Learning Center',
+    title: 'Lume',
     show: !SMOKE,
     webPreferences: { preload: join(dist, 'preload-app.cjs'), contextIsolation: true, sandbox: true, nodeIntegration: false },
   });
@@ -82,7 +82,7 @@ function openUdemy() {
   udemyWin = new BrowserWindow({
     width: 1200,
     height: 860,
-    title: 'Udemy · Learning Center',
+    title: 'Udemy · Lume',
     show: !SMOKE,
     webPreferences: {
       partition: 'persist:udemy', // mantém o login entre aberturas
@@ -105,7 +105,7 @@ function openUdemy() {
 
 function buildMenu() {
   const template = [
-    { label: 'Learning Center', submenu: [{ role: 'about' }, { type: 'separator' }, { role: 'quit', label: 'Sair' }] },
+    { label: 'Lume', submenu: [{ role: 'about' }, { type: 'separator' }, { role: 'quit', label: 'Sair' }] },
     {
       label: 'Udemy',
       submenu: [{ label: 'Abrir a Udemy (Meu aprendizado)', accelerator: 'CmdOrCtrl+U', click: openUdemy }],

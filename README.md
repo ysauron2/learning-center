@@ -1,4 +1,4 @@
-# Meu Hub · Learning Center
+# Lume
 
 Plataforma pessoal de estudos: cursos, sessões de foco, metas semanais e progresso.
 Este repositório é o **MVP** (Fase 1) do design aprovado. Os módulos avançados

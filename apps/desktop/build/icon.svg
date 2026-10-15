@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2d2580"/>
+      <stop offset="1" stop-color="#0e0b2b"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="0.5" cy="0.38" r="0.55">
+      <stop offset="0" stop-color="#8b5cf6" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#8b5cf6" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="page" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e9ddff"/>
+      <stop offset="0.45" stop-color="#b794f6"/>
+      <stop offset="1" stop-color="#6d3fe0"/>
+    </linearGradient>
+    <linearGradient id="cover" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5b2fd0"/>
+      <stop offset="1" stop-color="#2e1a85"/>
+    </linearGradient>
+    <linearGradient id="star" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#c9a8ff"/>
+    </linearGradient>
+    <filter id="blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="26"/></filter>
+    <clipPath id="body"><rect x="100" y="100" width="824" height="824" rx="190"/></clipPath>
+  </defs>
+
+  <rect x="100" y="100" width="824" height="824" rx="190" fill="url(#bg)"/>
+  <g clip-path="url(#body)">
+    <rect x="100" y="100" width="824" height="824" fill="url(#halo)"/>
+  </g>
+  <rect x="104" y="104" width="816" height="816" rx="186" fill="none" stroke="#a78bfa" stroke-opacity="0.28" stroke-width="6"/>
+
+  <!-- brilho atrás da estrela -->
+  <circle cx="512" cy="400" r="120" fill="#c4b5fd" opacity="0.65" filter="url(#blur)"/>
+
+  <!-- capa do livro -->
+  <path d="M250 604 C 330 584 440 590 512 640 C 584 590 694 584 774 604 L 774 790 C 676 768 566 784 512 836 C 458 784 348 768 250 790 Z" fill="url(#cover)"/>
+  <!-- páginas -->
+  <path d="M506 622 C 454 578 364 566 280 592 L 280 752 C 366 728 456 744 506 790 Z" fill="url(#page)"/>
+  <path d="M518 622 C 570 578 660 566 744 592 L 744 752 C 658 728 568 744 518 790 Z" fill="url(#page)"/>
+
+  <!-- estrela principal -->
+  <path d="M512 262 C 523 340 542 380 606 400 C 542 420 523 460 512 538 C 501 460 482 420 418 400 C 482 380 501 340 512 262 Z" fill="url(#star)"/>
+  <!-- faíscas pequenas -->
+  <path d="M376 330 C 380 352 388 362 410 368 C 388 374 380 384 376 406 C 372 384 364 374 342 368 C 364 362 372 352 376 330 Z" fill="#e9ddff"/>
+  <path d="M668 340 C 671 357 677 365 694 369 C 677 373 671 381 668 398 C 665 381 659 373 642 369 C 659 365 665 357 668 340 Z" fill="#e9ddff"/>
+</svg>

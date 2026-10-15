@@ -1,9 +1,9 @@
 @echo off
-rem Abre o Learning Center como app de desktop (Electron), com a janela da Udemy dentro dele.
-rem Os dados deste modo ficam em %APPDATA%\Learning Center (separados do modo navegador).
+rem Abre o Lume como app de desktop (Electron), com a janela da Udemy dentro dele.
+rem Os dados deste modo ficam em %APPDATA%\Lume (separados do modo navegador).
 setlocal
 cd /d "%~dp0"
-title Learning Center (desktop)
+title Lume (desktop)
 set NODE_NO_WARNINGS=1
 
 where node >nul 2>nul

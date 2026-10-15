@@ -70,7 +70,7 @@ export function AppleCalendar() {
         </div>
       </details>
       <p className="muted" style={{ margin: '12px 0 0', fontSize: 13 }}>
-        Atualiza enquanto o Learning Center estiver aberto neste computador. O Google Agenda <strong>não</strong> consegue assinar este endereço (ele não alcança o seu computador); para ele, use a conexão abaixo.
+        Atualiza enquanto o Lume estiver aberto neste computador. O Google Agenda <strong>não</strong> consegue assinar este endereço (ele não alcança o seu computador); para ele, use a conexão abaixo.
       </p>
     </section>
   );

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Learning Center · app de desktop (Electron) com a janela da Udemy embutida",
+  "description": "Lume · plataforma de estudos (app de desktop com a janela da Udemy embutida)",
   "main": "src/main.js",
   "scripts": {
     "build": "node ../../scripts/build-desktop.mjs",
@@ -17,11 +17,11 @@
     "esbuild": "^0.25.0",
     "vitest": "^3.0.0"
   },
-  "productName": "Learning Center",
+  "productName": "Lume",
   "author": "Learning Center",
   "build": {
-    "appId": "com.learningcenter.desktop",
-    "productName": "Learning Center",
+    "appId": "com.lume.app",
+    "productName": "Lume",
     "directories": {
       "output": "release"
     },

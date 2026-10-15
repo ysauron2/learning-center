@@ -1,6 +1,6 @@
 # App de desktop (Electron)
 
-O mesmo Learning Center, num programa com janela própria e **a janela da Udemy embutida**: a pessoa entra na conta dela ali dentro e o app sincroniza, sem extensão de navegador, sem loja e sem aprovação.
+O Lume, num programa com janela própria e **a janela da Udemy embutida**: a pessoa entra na conta dela ali dentro e o app sincroniza, sem extensão de navegador, sem loja e sem aprovação.
 
 ## Rodar (desenvolvimento, Windows)
 
@@ -29,8 +29,8 @@ Janela da Udemy ─(preload-udemy)┘   (ponte: bridge.js)    └── dados em
 
 | Sistema | Pasta |
 |---|---|
-| Windows | `%APPDATA%\Learning Center\` (`learning-center.db`, `settings.json`) |
-| macOS | `~/Library/Application Support/Learning Center/` |
+| Windows | `%APPDATA%\Lume\` (`learning-center.db`, `settings.json`) |
+| macOS | `~/Library/Application Support/Lume/` |
 
 São separados do modo navegador (`data/learning-center.db`). Para levar os dados de um para o outro, use **Backup → Baixar** num e **Backup → Restaurar** no outro.
 
@@ -44,9 +44,9 @@ São separados do modo navegador (`data/learning-center.db`). Para levar os dado
 
 Sem a assinatura paga (Apple Developer, ~US$ 99/ano) o app **funciona**, mas o macOS bloqueia a primeira abertura de programas baixados:
 
-1. Arraste **Learning Center** para *Aplicativos*.
+1. Arraste **Lume** para *Aplicativos*.
 2. Abra uma vez. O macOS recusa. Vá em **Ajustes do Sistema → Privacidade e Segurança**, role até o aviso do app e clique em **Abrir Mesmo Assim**. (No macOS 14 e anteriores: clique com o botão direito no app → *Abrir*.)
-3. Se aparecer "o app está danificado e não pode ser aberto", rode no Terminal: `xattr -dr com.apple.quarantine "/Applications/Learning Center.app"` e abra de novo.
+3. Se aparecer "o app está danificado e não pode ser aberto", rode no Terminal: `xattr -dr com.apple.quarantine "/Applications/Lume.app"` e abra de novo.
 
 Só na primeira vez. Gerar o instalador do Mac exige um Mac ou um servidor de build com macOS (por exemplo o GitHub Actions).
 
@@ -59,7 +59,7 @@ O arquivo `.github/workflows/desktop.yml` monta os instaladores na nuvem do GitH
 
 Localmente, no Windows: `npm run dist:desktop` gera `apps/desktop/release/` (o `.dmg` só dá para gerar num Mac, ou pelo GitHub).
 
-**Primeira abertura no Mac** (o app não tem o certificado pago da Apple): abra o `.dmg`, arraste para *Aplicativos*, depois clique com o **botão direito** no app → **Abrir** → **Abrir**. Só na primeira vez. Se o Mac disser que o app está "danificado", rode no Terminal: `xattr -cr "/Applications/Learning Center.app"`.
+**Primeira abertura no Mac** (o app não tem o certificado pago da Apple): abra o `.dmg`, arraste para *Aplicativos*, depois clique com o **botão direito** no app → **Abrir** → **Abrir**. Só na primeira vez. Se o Mac disser que o app está "danificado", rode no Terminal: `xattr -cr "/Applications/Lume.app"`.
 
 **Windows**: o SmartScreen pode avisar "app não reconhecido": **Mais informações → Executar assim mesmo**.
 

@@ -4,7 +4,7 @@ import { useTheme } from '../lib/hooks.js';
 import { isDesktop, openUdemy } from './DesktopUdemy.jsx';
 
 const ACTIVE = [
-  { to: '/', label: 'Learning Center', icon: 'book', end: true },
+  { to: '/', label: 'Início', icon: 'book', end: true },
   { to: '/cursos', label: 'Cursos', icon: 'courses' },
   { to: '/trilhas', label: 'Trilhas', icon: 'route' },
   { to: '/foco', label: 'Sessões de foco', icon: 'timer' },
@@ -25,8 +25,8 @@ export function Layout() {
     <div className="app">
       <nav className="sidebar" aria-label="Navegação principal">
         <div className="brand">
-          <span className="brand-mark"><Icon name="cube" size={18} strokeWidth={2} /></span>
-          MEU HUB
+          <span className="brand-mark"><Icon name="sparkle" size={18} strokeWidth={2} /></span>
+          LUME
         </div>
         {ACTIVE.map((i) => (
           <NavLink key={i.to} to={i.to} end={i.end} className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
