@@ -53,7 +53,7 @@ O banco fica em `data/learning-center.db` (ignorado pelo git).
 
 ## App de desktop (Electron)
 
-`iniciar-desktop.bat` (ou `npm run desktop`) abre o Learning Center como programa com janela própria e a janela da Udemy embutida, sem extensão. Veja [`docs/DESKTOP.md`](docs/DESKTOP.md).
+`iniciar-desktop.bat` (ou `npm run desktop`) abre o Learning Center como programa com janela própria e a janela da Udemy embutida, sem extensão. Veja [`docs/DESKTOP.md`](docs/DESKTOP.md). O app avisa quando há versão nova e, no Windows, se atualiza sozinho (no Mac abre a página de download).
 
 ## Atalho de um clique (Windows)
 

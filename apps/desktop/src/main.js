@@ -1,9 +1,10 @@
-import { app, BrowserWindow, ipcMain, Menu, shell } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, shell } from 'electron';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join } from 'node:path';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { createBridge, senderKind, isAuthHost } from './bridge.js';
 import { PLATFORMS, PLATFORM_IDS, platformOfUrl } from './platforms.js';
+import { createUpdateController } from './updates.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const dist = join(here, '..', 'dist');
@@ -15,6 +16,7 @@ let base;
 let mainWin;
 const platformWins = {}; // uma janela por plataforma (Udemy, Alura, Fundação Bradesco)
 let bridge;
+let updates;
 
 const isHttp = (url) => /^https?:\/\//i.test(url);
 
@@ -116,9 +118,48 @@ function openPlatform(id) {
 
 const openUdemy = () => openPlatform('udemy');
 
+/** Avisos de versão nova e atualização (só no app instalado; veja updates.js). */
+async function setupUpdates(settings, saveSettings) {
+  let updater = null;
+  if (app.isPackaged && !SMOKE && process.platform === 'win32') {
+    try {
+      const { default: electronUpdater } = await import('electron-updater');
+      updater = electronUpdater.autoUpdater;
+      updater.autoDownload = false; // só baixa quando a pessoa clica em "Atualizar agora"
+      updater.autoInstallOnAppQuit = false;
+      updater.setFeedURL({ provider: 'github', owner: 'ysauron2', repo: 'learning-center' });
+    } catch (error) {
+      console.error('[atualização] atualizador indisponível:', error?.message ?? error);
+    }
+  }
+  const icon = nativeImage.createFromPath(join(here, '..', 'build', 'icon.png'));
+  updates = createUpdateController({
+    currentVersion: app.getVersion(),
+    platform: process.platform,
+    arch: process.arch,
+    enabled: app.isPackaged && !SMOKE,
+    fetch: (url, init) => fetch(url, init),
+    getSnooze: () => settings.updateSnooze ?? null,
+    setSnooze: (snooze) => {
+      settings.updateSnooze = snooze;
+      try { saveSettings({ ...settings }); } catch { /* ignora */ }
+    },
+    showDialog: async ({ title, message, detail, buttons }) => {
+      const options = { type: 'info', title, message, detail, buttons, defaultId: 0, cancelId: buttons.length - 1, noLink: true, icon: icon.isEmpty() ? undefined : icon };
+      const { response } = mainWin && !mainWin.isDestroyed() && mainWin.isVisible() ? await dialog.showMessageBox(mainWin, options) : await dialog.showMessageBox(options);
+      return response;
+    },
+    openLink: (url) => shell.openExternal(url),
+    updater,
+    setProgress: (value) => { if (mainWin && !mainWin.isDestroyed()) mainWin.setProgressBar(value); },
+    log: (line) => console.log(line),
+  });
+  updates.start();
+}
+
 function buildMenu() {
   const template = [
-    { label: 'Lume', submenu: [{ role: 'about' }, { type: 'separator' }, { role: 'quit', label: 'Sair' }] },
+    { label: 'Lume', submenu: [{ role: 'about' }, { label: 'Verificar atualizações…', click: () => { updates?.checkNow({ manual: true }); } }, { type: 'separator' }, { role: 'quit', label: 'Sair' }] },
     {
       label: 'Plataformas',
       submenu: [
@@ -188,9 +229,10 @@ if (!app.requestSingleInstanceLock()) {
 
     buildMenu();
     createMainWindow();
+    await setupUpdates(settings, (s) => { try { writeFileSync(settingsFile, JSON.stringify(s)); } catch { /* ignora */ } });
     if (SMOKE) { PLATFORM_IDS.forEach(openPlatform); await smokeTest(); }
   });
 
   app.on('window-all-closed', () => app.quit());
-  app.on('before-quit', () => { server?.close().catch(() => {}); });
+  app.on('before-quit', () => { updates?.stop(); server?.close().catch(() => {}); });
 }

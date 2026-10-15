@@ -1,0 +1,26 @@
+{
+  "html_url": "https://github.com/ysauron2/learning-center/releases/tag/v0.1.1",
+  "tag_name": "v0.1.1",
+  "name": "Lume 0.1.1",
+  "draft": false,
+  "prerelease": false,
+  "body": "## Lume 0.1.1\n\nPlataforma de estudos: seus cursos, sessões de foco, plano semanal de estudo (com Notion e calendário), anotações, trilhas e gráficos de progresso. Os dados ficam no seu computador.\n\n**Novidade da 0.1.1:** corrigido o login da Udemy com Google/Apple/Facebook (ficava em tela branca).\n\n### Baixar\n\n| Seu computador | Baixe |\n|---|---|\n| **Windows** (10 ou 11) | [Lume-0.1.1-win-x64.exe](https://github.com/ysauron2/learning-center/releases/download/v0.1.1/Lume-0.1.1-win-x64.exe) |\n| **Mac com chip Apple** (M1, M2, M3, M4…) | [Lume-0.1.1-mac-arm64.dmg](https://github.com/ysauron2/learning-center/releases/download/v0.1.1/Lume-0.1.1-mac-arm64.dmg) |\n| **Mac com chip Intel** (mais antigo) | [Lume-0.1.1-mac-x64.dmg](https://github.com/ysauron2/learning-center/releases/download/v0.1.1/Lume-0.1.1-mac-x64.dmg) |\n\nNão sabe qual Mac você tem? Clique na maçã no canto da tela → **Sobre Este Mac**. Se aparecer \"Chip: Apple…\", baixe o de chip Apple; se aparecer \"Processador: Intel\", baixe o Intel.\n\n### Primeira abertura\n\n**Mac** (o app ainda não tem o certificado pago da Apple, então o Mac pede uma confirmação, só na primeira vez):\n1. Abra o arquivo `.dmg` e arraste o **Lume** para a pasta **Aplicativos**.\n2. Abra o Lume. O Mac vai recusar. Vá em **Ajustes do Sistema → Privacidade e Segurança**, role até o aviso do Lume e clique em **Abrir Mesmo Assim**. (Em Macs mais antigos: botão direito no app → **Abrir**.)\n3. Se aparecer \"o app está danificado\", abra o Terminal e rode: `xattr -cr \"/Applications/Lume.app\"`. Depois abra de novo.\n\n**Windows**: se aparecer \"O Windows protegeu seu computador\", clique em **Mais informações → Executar assim mesmo**.\n\n### Usando\n\n- A janela da Udemy fica dentro do app: entre na sua conta da Udemy ali e importe seus cursos.\n- Em **Agenda** você liga o Notion (um código só) ou assina o calendário no Calendário da Apple. O passo a passo está na própria tela.\n- Cada pessoa começa com o app vazio, com os próprios dados.\n",
+  "published_at": "2026-10-15T04:06:48Z",
+  "assets": [
+    {
+      "name": "Lume-0.1.1-mac-arm64.dmg",
+      "size": 129470016,
+      "browser_download_url": "https://github.com/ysauron2/learning-center/releases/download/v0.1.1/Lume-0.1.1-mac-arm64.dmg"
+    },
+    {
+      "name": "Lume-0.1.1-mac-x64.dmg",
+      "size": 135911140,
+      "browser_download_url": "https://github.com/ysauron2/learning-center/releases/download/v0.1.1/Lume-0.1.1-mac-x64.dmg"
+    },
+    {
+      "name": "Lume-0.1.1-win-x64.exe",
+      "size": 110835322,
+      "browser_download_url": "https://github.com/ysauron2/learning-center/releases/download/v0.1.1/Lume-0.1.1-win-x64.exe"
+    }
+  ]
+}

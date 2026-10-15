@@ -38,6 +38,26 @@ Além da Udemy, o menu **Plataformas** abre a **Alura** e a **Fundação Bradesc
 
 São separados do modo navegador (`data/learning-center.db`). Para levar os dados de um para o outro, use **Backup → Baixar** num e **Backup → Restaurar** no outro.
 
+## Aviso de versão nova e atualização
+
+O Lume (instalado) consulta sozinho, 15 segundos depois de abrir e a cada 6 horas, a última versão publicada em **Releases** do repositório (`ysauron2/learning-center`). Se houver uma mais nova, aparece uma janelinha: **"Nova versão do Lume"**, com as novidades e os botões **Atualizar agora** e **Depois**. "Depois" silencia aquela versão por 24 horas (uma versão ainda mais nova avisa de novo). Se a internet falhar ou o GitHub não responder, nada aparece: ele tenta de novo no próximo ciclo. Também dá para pedir na hora em **Lume → Verificar atualizações…** (esse sempre responde).
+
+| | Windows | Mac |
+|---|---|---|
+| "Atualizar agora" | Baixa a versão nova dentro do app (barra de progresso no ícone da barra de tarefas), pergunta **"Reiniciar agora para instalar?"** e instala. Se der erro, mostra uma mensagem e oferece abrir a página de download. | Abre no navegador a página de download. Baixe o arquivo do seu Mac e arraste para *Aplicativos*. |
+| Por quê | Usa o `electron-updater` com o `latest.yml` da Release. | O app não tem a assinatura paga da Apple, e o macOS não deixa instalar atualização sozinho. |
+
+Segurança: só são abertos links de `https://github.com/ysauron2/learning-center/…`; nada baixado é executado fora do fluxo do `electron-updater`. Em desenvolvimento (`npm run desktop`) e nos testes automáticos (`LC_SMOKE`) a verificação fica desligada. O código está em `apps/desktop/src/updates.js`.
+
+**Como publicar uma versão nova**
+
+1. Suba a versão em `apps/desktop/package.json` (ex.: `0.1.2`) e faça o commit.
+2. Crie a tag e envie: `git tag v0.1.2 && git push origin v0.1.2`.
+3. O workflow monta os instaladores e publica na Release o `.exe`, os `.dmg`, o `latest.yml` (e `latest-mac.yml`, se gerado) e os `.blockmap`. Não apague esses arquivos da Release: o Windows precisa deles para atualizar.
+4. Escreva as novidades no texto da Release (as primeiras linhas aparecem no aviso).
+
+O repositório precisa estar **público** para o app conseguir consultar as versões. Só quem instalar uma versão que já tenha este recurso passa a receber os avisos; quem tem uma versão anterior precisa baixar a nova uma vez à mão.
+
 ## Limites conhecidos
 
 - O login **"Continuar com o Google/Apple/Facebook"** abre numa janelinha dentro do app (a partir da 0.1.1; antes ficava em tela branca). Como o Google às vezes recusa navegadores embutidos, se não funcionar use e-mail e senha: quem criou a conta pelo Google pode definir uma senha em "Esqueci minha senha" na Udemy.

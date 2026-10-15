@@ -3,6 +3,7 @@ name: App de desktop
 # Gera o instalador do Windows (.exe) e do Mac (.dmg, Intel e Apple Silicon).
 # Como usar: aba "Actions" → "App de desktop" → "Run workflow". Os arquivos aparecem em "Artifacts" no fim da execução.
 # Para publicar numa página de download: crie uma tag (ex.: v0.1.0) e os instaladores vão para "Releases".
+# Junto vão o latest.yml / latest-mac.yml e os .blockmap: é com eles que o app do Windows se atualiza sozinho.
 on:
   workflow_dispatch:
   push:
@@ -47,6 +48,8 @@ jobs:
           path: |
             apps/desktop/release/*.exe
             apps/desktop/release/*.dmg
+            apps/desktop/release/*.blockmap
+            apps/desktop/release/latest*.yml
           if-no-files-found: error
 
   publicar:
