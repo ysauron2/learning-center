@@ -4,17 +4,29 @@ import { addDays, startOfDay } from '../../core/time.js';
 import { GoogleError, createGoogleClient } from '../../core/google.js';
 import { buildIcs } from './ics.js';
 
-import { STUDY_CALENDAR_NAME, WINDOW_DAYS, SESSION_DAYS, rfc3339Local, sessionSummary, createStudyEvents } from './study-events.js';
+import { STUDY_CALENDAR_NAME, WINDOW_DAYS, SESSION_DAYS, rfc3339Local, sessionSummary, createStudyEvents, dateKey } from './study-events.js';
+import { createMissed } from './missed.js';
 
 export { STUDY_CALENDAR_NAME, rfc3339Local };
 const CACHE_MS = 2 * 60 * 1000;
 const MAX_PLAN = 50;
+const MAX_ONCE = 100;
+/** O avulso precisa cair dentro da janela que as agendas externas enxergam (hoje + 27 dias). */
+const ONCE_MAX_DAYS = WINDOW_DAYS - 1;
 
 export const planBody = z.object({
   weekday: z.number().int().min(0).max(6),
   startTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Use o formato HH:MM, de 00:00 a 23:59.'),
   durationMin: z.number().int().min(5, 'No mínimo 5 minutos.').max(600, 'No máximo 10 horas.'),
   courseId: z.number().int().positive().nullish(),
+});
+export const onceBody = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use o formato AAAA-MM-DD.'),
+  startTime: planBody.shape.startTime,
+  durationMin: planBody.shape.durationMin,
+  courseId: z.number().int().positive().nullish(),
+  fromPlanId: z.number().int().positive().nullish(),
+  fromDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use o formato AAAA-MM-DD.').nullish(),
 });
 export const planUpdate = planBody.partial();
 export const configBody = z.object({ clientId: z.string().trim().min(1, 'Informe o ID do cliente.').max(300), clientSecret: z.string().trim().min(1, 'Informe o segredo.').max(300) });
@@ -23,7 +35,8 @@ export const settingsBody = z.object({ autoSync: z.boolean().optional(), logSess
 export function createCalendarService({ db, clock, courses, fetchImpl, timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone }) {
   const google = createGoogleClient({ db, clock, fetchImpl });
   const study = createStudyEvents({ db, clock, courses });
-  const { listPlan, desiredPlanEvents, recentSessions } = study;
+  const { listPlan, desiredPlanEvents, desiredOnceEvents, recentSessions } = study;
+  const missedCalc = createMissed({ db, clock, study });
   const cache = new Map();
   let syncing = null;
 
@@ -212,6 +225,33 @@ export function createCalendarService({ db, clock, courses, fetchImpl, timeZone 
     db.prepare('DELETE FROM lc_study_plan WHERE id = ?').run(id);
   }
 
+  // ---------- blocos avulsos (uma ocorrência só) ----------
+  function addOnce(raw) {
+    const o = onceBody.parse(raw);
+    checkCourse(o.courseId);
+    const now = clock.now();
+    const today = startOfDay(now);
+    const [y, mo, d] = o.date.split('-').map(Number);
+    const day = new Date(y, mo - 1, d);
+    if (Number.isNaN(day.getTime()) || dateKey(day) !== o.date) throw new HttpError(400, 'INVALID_DATE', 'Data inválida.');
+    if (day < today) throw new HttpError(400, 'INVALID_DATE', 'Escolha hoje ou um dia que ainda vai chegar.');
+    if (day > addDays(today, ONCE_MAX_DAYS)) throw new HttpError(400, 'INVALID_DATE', 'Escolha uma data dentro das próximas 4 semanas.');
+    const [hh, mm] = o.startTime.split(':').map(Number);
+    const end = new Date(y, mo - 1, d, hh, mm + o.durationMin);
+    if (end <= now) throw new HttpError(400, 'INVALID_DATE', 'Esse horário já passou. Escolha um horário mais adiante.');
+    if (db.prepare('SELECT COUNT(*) AS n FROM lc_study_once WHERE date >= ?').get(dateKey(today)).n >= MAX_ONCE) {
+      throw new HttpError(400, 'ONCE_FULL', `Você já tem ${MAX_ONCE} blocos avulsos marcados. Apague alguns para criar outro.`);
+    }
+    const res = db.prepare('INSERT INTO lc_study_once (date, start_time, duration_min, course_id, from_plan_id, from_date, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
+      .run(o.date, o.startTime, o.durationMin, o.courseId ?? null, o.fromPlanId ?? null, o.fromPlanId ? (o.fromDate ?? null) : null, now.toISOString());
+    return study.getOnce(Number(res.lastInsertRowid));
+  }
+
+  function removeOnce(id) {
+    if (!db.prepare('SELECT 1 FROM lc_study_once WHERE id = ?').get(id)) throw notFound('Bloco avulso');
+    db.prepare('DELETE FROM lc_study_once WHERE id = ?').run(id);
+  }
+
   // ---------- sincronização ----------
   async function listManaged(calId, kind, from, to) {
     const out = [];
@@ -227,21 +267,25 @@ export function createCalendarService({ db, clock, courses, fetchImpl, timeZone 
     return out;
   }
 
-  const planBodyFor = (d) => ({
+  /** Plano e avulso usam o mesmo formato; muda só o tipo (lcKind) e o identificador. */
+  const KINDS = {
+    plan: { idProp: 'lcPlan', idOf: (d) => d.planId },
+    once: { idProp: 'lcOnce', idOf: (d) => d.onceId },
+  };
+  const planBodyFor = (d, kind = 'plan') => ({
     summary: d.summary,
     description: d.description,
     start: { dateTime: rfc3339Local(d.start), timeZone },
     end: { dateTime: rfc3339Local(d.end), timeZone },
     reminders: { useDefault: false, overrides: [{ method: 'popup', minutes: 10 }] },
-    extendedProperties: { private: { lcKind: 'plan', lcPlan: String(d.planId), lcDate: d.date } },
+    extendedProperties: { private: { lcKind: kind, [KINDS[kind].idProp]: String(KINDS[kind].idOf(d)), lcDate: d.date } },
   });
 
-  async function syncPlan(calId) {
+  async function syncPlan(calId, kind = 'plan', desired = desiredPlanEvents()) {
     const now = clock.now();
     const from = startOfDay(now);
     const to = addDays(from, WINDOW_DAYS);
-    const desired = desiredPlanEvents();
-    const existing = await listManaged(calId, 'plan', from, to);
+    const existing = await listManaged(calId, kind, from, to);
     const seen = new Set();
     let created = 0;
     let updated = 0;
@@ -249,7 +293,7 @@ export function createCalendarService({ db, clock, courses, fetchImpl, timeZone 
     const evPath = (id) => `/calendars/${encodeURIComponent(calId)}/events/${encodeURIComponent(id)}`;
     for (const ev of existing) {
       const priv = ev.extendedProperties?.private ?? {};
-      const key = `${priv.lcPlan}|${priv.lcDate}`;
+      const key = `${priv[KINDS[kind].idProp]}|${priv.lcDate}`;
       const want = desired.get(key);
       if (!want || seen.has(key)) {
         await google.api('DELETE', evPath(ev.id)).catch((e) => { if (!(e instanceof GoogleError && [404, 410].includes(e.status))) throw e; });
@@ -261,13 +305,13 @@ export function createCalendarService({ db, clock, courses, fetchImpl, timeZone 
         && ev.start?.dateTime && new Date(ev.start.dateTime).getTime() === want.start.getTime()
         && ev.end?.dateTime && new Date(ev.end.dateTime).getTime() === want.end.getTime();
       if (!same) {
-        await google.api('PATCH', evPath(ev.id), { body: planBodyFor(want) });
+        await google.api('PATCH', evPath(ev.id), { body: planBodyFor(want, kind) });
         updated += 1;
       }
     }
     for (const [key, want] of desired) {
       if (seen.has(key)) continue;
-      await google.api('POST', `/calendars/${encodeURIComponent(calId)}/events`, { body: planBodyFor(want) });
+      await google.api('POST', `/calendars/${encodeURIComponent(calId)}/events`, { body: planBodyFor(want, kind) });
       created += 1;
     }
     return { created, updated, deleted };
@@ -304,7 +348,11 @@ export function createCalendarService({ db, clock, courses, fetchImpl, timeZone 
   async function runSync() {
     requireConnected();
     try {
-      const plan = await withStudyCalendar((calId) => syncPlan(calId));
+      const plan = await withStudyCalendar(async (calId) => {
+        const a = await syncPlan(calId, 'plan', desiredPlanEvents());
+        const b = await syncPlan(calId, 'once', desiredOnceEvents());
+        return { created: a.created + b.created, updated: a.updated + b.updated, deleted: a.deleted + b.deleted };
+      });
       const sessions = await withStudyCalendar((calId) => syncSessions(calId));
       cache.clear();
       google.save({ last_sync_at: clock.now().toISOString(), last_error: null });
@@ -330,6 +378,13 @@ export function createCalendarService({ db, clock, courses, fetchImpl, timeZone 
         start: rfc3339Local(d.start), end: rfc3339Local(d.end), allDay: false, calendar: 'study', kind: 'plan', url: null,
       });
     }
+    for (const d of desiredOnceEvents().values()) {
+      if (d.start >= to) continue;
+      out.push({
+        id: `once:${d.onceId}|${d.date}`, title: d.summary, courseId: d.courseId ?? null, courseTitle: d.courseTitle ?? null, lessonTitle: d.lessonTitle,
+        start: rfc3339Local(d.start), end: rfc3339Local(d.end), allDay: false, calendar: 'study', kind: 'once', url: null,
+      });
+    }
     for (const s of recentSessions(from)) {
       const start = new Date(s.started_at);
       out.push({
@@ -348,6 +403,9 @@ export function createCalendarService({ db, clock, courses, fetchImpl, timeZone 
     const events = [];
     for (const d of desiredPlanEvents().values()) {
       events.push({ uid: `plan-${d.planId}-${d.date}@learning-center`, start: d.start, end: d.end, summary: d.summary, description: d.description, alarmMin: 10 });
+    }
+    for (const d of desiredOnceEvents().values()) {
+      events.push({ uid: `once-${d.onceId}-${d.date}@learning-center`, start: d.start, end: d.end, summary: d.summary, description: d.description, alarmMin: 10 });
     }
     if (google.row().log_sessions) {
       for (const s of recentSessions(addDays(startOfDay(clock.now()), -SESSION_DAYS))) {
@@ -368,7 +426,7 @@ export function createCalendarService({ db, clock, courses, fetchImpl, timeZone 
   return {
     status, saveConfig, connectUrl, handleCallback, disconnect, setSettings,
     events: (opts) => guard(() => events(opts)),
-    listPlan, addPlan, updatePlan, removePlan, syncNow, feed, upcoming,
+    listPlan, addPlan, updatePlan, removePlan, addOnce, removeOnce, missed: missedCalc.missed, syncNow, feed, upcoming,
     guard, google,
   };
 }

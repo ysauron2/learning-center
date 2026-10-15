@@ -39,7 +39,7 @@ describe('backup · exportar', () => {
     const bk = await exportOf(a);
     expect(bk).toMatchObject({ app: 'learning-center', version: 1 });
     expect(typeof bk.exportedAt).toBe('string');
-    expect(Object.keys(bk.data).sort()).toEqual(['courseTags', 'courses', 'lessons', 'modules', 'noteTags', 'notes', 'options', 'sessions', 'settings', 'studyPlan', 'trackItems', 'tracks']);
+    expect(Object.keys(bk.data).sort()).toEqual(['courseTags', 'courses', 'lessons', 'modules', 'noteTags', 'notes', 'options', 'sessions', 'settings', 'studyOnce', 'studyPlan', 'trackItems', 'tracks']);
     expect(bk.data.notes).toHaveLength(2);
     expect(bk.data.noteTags).toHaveLength(2);
     expect(bk.data.tracks).toHaveLength(1);

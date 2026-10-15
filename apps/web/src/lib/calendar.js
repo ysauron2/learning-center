@@ -36,7 +36,7 @@ export function timeRange(ev) {
   return ev.end ? `${hhmm(ev.start)}–${hhmm(ev.end)}` : hhmm(ev.start);
 }
 
-export const eventIcon = (ev) => (ev.kind === 'plan' ? '📚' : ev.kind === 'session' ? '✅' : '');
+export const eventIcon = (ev) => (ev.kind === 'plan' || ev.kind === 'once' ? '📚' : ev.kind === 'session' ? '✅' : '');
 
 /** Agrupa os eventos por dia (em ordem); no dia, os de dia inteiro vêm primeiro. */
 export function groupByDay(events, now = new Date()) {

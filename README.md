@@ -10,6 +10,7 @@ como “em breve” na navegação e entram nas próximas fases (veja `docs/ARQU
 - **Trilhas**: o roteiro dos seus cursos na ordem em que você quer fazer. Crie marcando os cursos numa lista, ou com um clique a partir de sugestões por categoria. A trilha avança sozinha, mostra a próxima etapa e aceita etapas avulsas (prova, projeto…).
 - **Anotações**: Markdown (títulos, listas, tabelas, tarefas) com prévia, busca sem acento, tags e vínculo opcional com curso e aula; salva sozinha.
 - **Plataforma e categoria à escolha**: ao cadastrar um curso (e ao importar da Udemy), escolha entre as que já existem ou crie a sua. Em *Cursos → Categorias e plataformas* dá para renomear e excluir (os cursos vão para "Geral" ou "Outro").
+- **Início com atalhos**: foco rápido de 15/25/45 min, aviso de bloco perdido com "remarcar para hoje" e anotação rápida. Veja [`docs/INICIO.md`](docs/INICIO.md).
 - **Google Agenda**: veja os próximos 7 dias no início e monte um plano de estudo semanal que aparece sozinho no seu Google Agenda (num calendário próprio), junto com as sessões de foco concluídas. Veja [`docs/GOOGLE-AGENDA.md`](docs/GOOGLE-AGENDA.md).
 - **Notion**: com um código só (sem Google Cloud), o app cria no seu Notion a tabela "Learning Center · Estudos" com seus horários de estudo e sessões de foco; o Notion Calendar mostra essa tabela junto com Google e iCloud. Veja [`docs/NOTION.md`](docs/NOTION.md).
 - **Backup**: baixa todos os dados num arquivo e restaura de um arquivo (tela **Backup**), com prévia, confirmação e uma cópia de segurança automática antes de substituir.

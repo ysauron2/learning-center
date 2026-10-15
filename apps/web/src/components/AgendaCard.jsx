@@ -18,7 +18,7 @@ export function syncSummaryText(r) {
 /** Agenda do início quando não há Google: a semana inteira de relance e o próximo bloco de estudo em destaque. */
 function LocalAgenda({ events, notion, syncing, onSync, message, error }) {
   const now = new Date();
-  const plan = events.filter((e) => e.kind === 'plan');
+  const plan = events.filter((e) => e.kind === 'plan' || e.kind === 'once');
   const next = plan.find((e) => new Date(e.end) > now);
   const days = nextDays(7, now);
   const byDay = new Map(days.map((d) => [d.key, []]));

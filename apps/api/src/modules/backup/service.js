@@ -63,6 +63,16 @@ const planRow = z.object({
   course_id: nullableId,
   created_at: z.string().min(1).max(40),
 });
+const onceRow = z.object({
+  id,
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  start_time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+  duration_min: z.number().int().min(5).max(600),
+  course_id: nullableId,
+  from_plan_id: nullableId.default(null),
+  from_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().default(null),
+  created_at: z.string().min(1).max(40),
+});
 const noteRow = z.object({
   id,
   title: z.string().max(200),
@@ -108,6 +118,8 @@ const backupSchema = z.object({
     // ausente em backups antigos: aí valem as sugestões padrão
     options: z.array(optionRow).optional(),
     studyPlan: z.array(planRow).default([]),
+    // ausente em backups antigos (anteriores aos blocos avulsos)
+    studyOnce: z.array(onceRow).default([]),
   }),
 });
 
@@ -124,6 +136,7 @@ const COLUMNS = {
   trackItems: 'id, track_id, position, course_id, title, done_at',
   options: 'kind, name',
   studyPlan: 'id, weekday, start_time, duration_min, course_id, created_at',
+  studyOnce: 'id, date, start_time, duration_min, course_id, from_plan_id, from_date, created_at',
 };
 const TABLES = {
   courses: ['lc_courses', 'id'],
@@ -138,6 +151,7 @@ const TABLES = {
   trackItems: ['lc_track_items', 'id'],
   options: ['lc_options', 'kind, name'],
   studyPlan: ['lc_study_plan', 'id'],
+  studyOnce: ['lc_study_once', 'id'],
 };
 
 const invalid = (message, details) => new HttpError(400, 'INVALID_BACKUP', message, details);
@@ -205,6 +219,10 @@ export function createBackupService(db, clock) {
     for (const p of d.studyPlan) {
       if (p.course_id !== null && !courseIds.has(p.course_id)) throw invalid(`Bloco do plano aponta para curso inexistente (${p.course_id}).`);
     }
+    unique(d.studyOnce, 'id', 'Bloco avulso');
+    for (const o of d.studyOnce) {
+      if (o.course_id !== null && !courseIds.has(o.course_id)) throw invalid(`Bloco avulso aponta para curso inexistente (${o.course_id}).`);
+    }
     const noteIds = unique(d.notes, 'id', 'Anotação');
     for (const n of d.notes) {
       if (n.course_id !== null && !courseIds.has(n.course_id)) throw invalid(`Anotação aponta para curso inexistente (${n.course_id}).`);
@@ -244,6 +262,7 @@ export function createBackupService(db, clock) {
     notes: d.notes.length,
     tracks: d.tracks.length,
     plan: d.studyPlan.length,
+    once: d.studyOnce.length,
   });
 
   function preview(raw) {
@@ -256,15 +275,15 @@ export function createBackupService(db, clock) {
     const bk = validate(raw);
     const d = bk.data;
     transaction(db, () => {
-      for (const t of ['lc_note_tags', 'lc_notes', 'lc_track_items', 'lc_tracks', 'lc_study_sessions', 'lc_lessons', 'lc_modules', 'lc_course_tags', 'lc_courses', 'lc_settings', 'lc_options', 'lc_study_plan']) {
+      for (const t of ['lc_note_tags', 'lc_notes', 'lc_track_items', 'lc_tracks', 'lc_study_sessions', 'lc_lessons', 'lc_modules', 'lc_course_tags', 'lc_courses', 'lc_settings', 'lc_options', 'lc_study_plan', 'lc_study_once']) {
         db.exec(`DELETE FROM ${t}`);
       }
-      db.exec("DELETE FROM sqlite_sequence WHERE name IN ('lc_courses','lc_modules','lc_lessons','lc_study_sessions','lc_notes','lc_tracks','lc_track_items','lc_study_plan')");
+      db.exec("DELETE FROM sqlite_sequence WHERE name IN ('lc_courses','lc_modules','lc_lessons','lc_study_sessions','lc_notes','lc_tracks','lc_track_items','lc_study_plan','lc_study_once')");
       const insert = (table, cols, rows) => {
         const stmt = db.prepare(`INSERT INTO ${table} (${cols.join(', ')}) VALUES (${cols.map(() => '?').join(', ')})`);
         for (const r of rows) stmt.run(...cols.map((c) => r[c]));
       };
-      for (const name of ['courses', 'courseTags', 'modules', 'lessons', 'sessions', 'tracks', 'trackItems', 'notes', 'noteTags', 'studyPlan', 'settings']) {
+      for (const name of ['courses', 'courseTags', 'modules', 'lessons', 'sessions', 'tracks', 'trackItems', 'notes', 'noteTags', 'studyPlan', 'studyOnce', 'settings']) {
         insert(TABLES[name][0], COLUMNS[name].split(', '), d[name]);
       }
       // lista de categorias/plataformas: a do backup (ou as padrão, se for backup antigo) + o que os cursos usam

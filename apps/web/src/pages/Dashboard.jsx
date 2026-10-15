@@ -7,6 +7,10 @@ import { Icon } from '../components/Icon.jsx';
 import { CourseForm } from '../components/CourseForm.jsx';
 import { CourseArt } from '../components/CourseArt.jsx';
 import { AgendaCard } from '../components/AgendaCard.jsx';
+import { Isolated } from '../components/Isolated.jsx';
+import { MissedBlocks } from '../components/MissedBlocks.jsx';
+import { QuickFocus } from '../components/QuickFocus.jsx';
+import { QuickNote } from '../components/QuickNote.jsx';
 import { EmptyState, ErrorState, Modal, ProgressBar, Skeleton, Toast } from '../components/ui.jsx';
 
 function NextAction({ action, onAddCourse }) {
@@ -142,7 +146,10 @@ export default function Dashboard() {
         </section>
       </div>
 
+      <Isolated><MissedBlocks /></Isolated>
+      <Isolated><QuickFocus nextAction={nextAction} /></Isolated>
       <AgendaCard />
+      <Isolated><QuickNote defaultCourseId={nextAction.course?.id ?? null} /></Isolated>
 
       <div className="dash-bottom">
         <section className="card" aria-label="Horas por dia">

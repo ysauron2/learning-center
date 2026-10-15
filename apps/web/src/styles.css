@@ -391,3 +391,11 @@ button { cursor: pointer; }
 .agenda-steps { margin: 0 0 14px; padding-left: 20px; line-height: 1.7; }
 .agenda-url { display: inline-block; max-width: 100%; overflow-x: auto; padding: 6px 10px; border-radius: 8px; background: var(--surface-2); font-size: 13px; }
 .agenda-redirect { margin: 12px 0; padding: 12px 14px; border-radius: 12px; background: var(--brand-soft); line-height: 1.6; }
+
+/* Início: foco rápido, atrasado e anotação rápida */
+.quick-card, .missed-card { margin-top: 16px; }
+.missed-card { border-left: 4px solid var(--brand); }
+.missed-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 14px; }
+.missed-item + .missed-item { border-top: 1px solid var(--border, rgba(127,127,127,.25)); padding-top: 14px; }
+.quick-card a:focus-visible, .quick-card button:focus-visible, .quick-card textarea:focus-visible, .quick-card select:focus-visible,
+.missed-card a:focus-visible, .missed-card button:focus-visible, .missed-card input:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }

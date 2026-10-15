@@ -7,6 +7,7 @@ import { addDays, startOfDay } from '../../core/time.js';
  */
 export const WINDOW_DAYS = 28;
 export const SESSION_DAYS = 14;
+export const dateKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 export const STUDY_CALENDAR_NAME = 'Learning Center · Estudos';
 
 const pad = (n) => String(n).padStart(2, '0');
@@ -62,6 +63,42 @@ export function createStudyEvents({ db, clock, courses }) {
     return out;
   }
 
+  const onceRow = (r) => ({ id: r.id, date: r.date, startTime: r.start_time, durationMin: r.duration_min, courseId: r.course_id, courseTitle: r.course_title ?? null, fromPlanId: r.from_plan_id ?? null, fromDate: r.from_date ?? null });
+  const ONCE_SELECT = 'SELECT o.*, c.title AS course_title FROM lc_study_once o LEFT JOIN lc_courses c ON c.id = o.course_id';
+  const getOnce = (id) => {
+    const r = db.prepare(`${ONCE_SELECT} WHERE o.id = ?`).get(id);
+    return r ? onceRow(r) : null;
+  };
+  /** Blocos avulsos com data de `fromDate` (AAAA-MM-DD) em diante. */
+  const listOnce = (fromDate = '0000-00-00') => db.prepare(`${ONCE_SELECT} WHERE o.date >= ? ORDER BY o.date, o.start_time, o.id`).all(fromDate).map(onceRow);
+
+  /** Blocos avulsos que ainda vão acontecer (hoje, depois de agora, até daqui a 4 semanas). Chave: "<id>|<AAAA-MM-DD>". */
+  function desiredOnceEvents() {
+    const now = clock.now();
+    const today = startOfDay(now);
+    const out = new Map();
+    for (const o of listOnce(dateKey(today))) {
+      const [y, mo, d] = o.date.split('-').map(Number);
+      const [hh, mm] = o.startTime.split(':').map(Number);
+      const start = new Date(y, mo - 1, d, hh, mm);
+      const end = new Date(start.getTime() + o.durationMin * 60000);
+      if (end <= now || start >= addDays(today, WINDOW_DAYS)) continue;
+      const lesson = o.courseId ? courses.nextLesson(o.courseId) : null;
+      out.set(`${o.id}|${o.date}`, {
+        onceId: o.id,
+        courseId: o.courseId,
+        lessonTitle: lesson?.title ?? null,
+        date: o.date,
+        start,
+        end,
+        courseTitle: o.courseTitle,
+        summary: o.courseTitle ? `📚 Estudar: ${o.courseTitle}` : '📚 Hora de estudar',
+        description: `Bloco de estudo marcado no Lume.${lesson ? `\nPróxima aula: ${lesson.title}` : ''}`,
+      });
+    }
+    return out;
+  }
+
   /** Sessões de foco recentes (reais, com pelo menos 1 minuto). */
   function recentSessions(from) {
     return db.prepare(
@@ -72,5 +109,5 @@ export function createStudyEvents({ db, clock, courses }) {
     ).all(from.toISOString());
   }
 
-  return { listPlan, getPlan, desiredPlanEvents, recentSessions };
+  return { listPlan, getPlan, desiredPlanEvents, listOnce, getOnce, desiredOnceEvents, recentSessions };
 }

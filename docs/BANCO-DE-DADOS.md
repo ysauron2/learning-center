@@ -37,6 +37,8 @@ histórico), `kind` (`pomodoro|stopwatch|manual`), `planned_min`, `started_at`, 
 
 **lc_options** — `(kind 'category'|'platform', name)`: as categorias e plataformas que a pessoa escolhe (migração `006`, já com as sugestões padrão). O nome não diferencia maiúsculas.
 
+**lc_study_once** — blocos de estudo avulsos (uma ocorrência só): `date` 'AAAA-MM-DD', `start_time`, `duration_min`, `course_id` (`SET NULL`), `from_plan_id`/`from_date` (de qual bloco do plano veio, sem chave estrangeira). Entra no backup (migração `009`, aditiva).
+
 **lc_study_plan** — blocos semanais de estudo: `weekday` (0 = segunda), `start_time` 'HH:MM', `duration_min`, `course_id` (`SET NULL`). Entra no backup (migração `007`).
 
 **lc_google** — UMA linha: ID e segredo do app no Google Cloud, tokens, conta, id do calendário de estudos, `last_sync_at`/`last_error`, `auto_sync`, `log_sessions`. **Não entra no backup** (são credenciais).

@@ -101,13 +101,13 @@ export function createNotionService({ db, clock, courses, fetchImpl, pauseMs, sl
   // ---------- sincronização ----------
   const databaseId = () => notion.row().database_id;
 
-  const planProps = (d) => ({
+  const planProps = (d, prefix = 'plan') => ({
     Nome: { title: text(d.summary) },
     Quando: { date: { start: rfc3339Local(d.start), end: rfc3339Local(d.end) } },
     Tipo: { select: { name: TYPE_PLAN } },
     Curso: { rich_text: text(d.courseTitle ?? '') },
     Detalhes: { rich_text: text(d.description) },
-    Chave: { rich_text: text(`plan-${d.planId}-${d.date}`) },
+    Chave: { rich_text: text(`${prefix}-${d.planId ?? d.onceId}-${d.date}`) },
   });
 
   /** Todas as linhas (não arquivadas) da tabela a partir de uma data, com paginação. */
@@ -131,18 +131,19 @@ export function createNotionService({ db, clock, courses, fetchImpl, pauseMs, sl
 
   async function syncPlan(rows) {
     const now = clock.now();
-    const desired = study.desiredPlanEvents();
+    // blocos do plano e avulsos compartilham a mesma tabela; a chave diferencia (plan-… / once-…)
+    const desired = { plan: study.desiredPlanEvents(), once: study.desiredOnceEvents() };
     const byKey = new Map();
     let created = 0;
     let updated = 0;
     let deleted = 0;
     for (const row of rows) {
       const key = keyOf(row);
-      if (!key.startsWith('plan-')) continue;
+      if (!key.startsWith('plan-') && !key.startsWith('once-')) continue;
       const endIso = row.properties?.Quando?.date?.end ?? row.properties?.Quando?.date?.start;
       if (endIso && new Date(endIso) <= now) continue; // já aconteceu: vira histórico, não mexemos
-      const m = key.match(/^plan-(\d+)-(\d{4}-\d{2}-\d{2})$/);
-      const want = m ? desired.get(`${m[1]}|${m[2]}`) : null;
+      const m = key.match(/^(plan|once)-(\d+)-(\d{4}-\d{2}-\d{2})$/);
+      const want = m ? desired[m[1]].get(`${m[2]}|${m[3]}`) : null;
       if (!want || byKey.has(key)) {
         await archive(row);
         deleted += 1;
@@ -156,14 +157,16 @@ export function createNotionService({ db, clock, courses, fetchImpl, pauseMs, sl
         && date?.start && new Date(date.start).getTime() === want.start.getTime()
         && date?.end && new Date(date.end).getTime() === want.end.getTime();
       if (!same) {
-        await notion.request('PATCH', `/pages/${encodeURIComponent(row.id)}`, { properties: planProps(want) });
+        await notion.request('PATCH', `/pages/${encodeURIComponent(row.id)}`, { properties: planProps(want, m[1]) });
         updated += 1;
       }
     }
-    for (const [, want] of desired) {
-      if (byKey.has(`plan-${want.planId}-${want.date}`)) continue;
-      await notion.request('POST', '/pages', { parent: { database_id: databaseId() }, properties: planProps(want) });
-      created += 1;
+    for (const prefix of ['plan', 'once']) {
+      for (const [, want] of desired[prefix]) {
+        if (byKey.has(`${prefix}-${want.planId ?? want.onceId}-${want.date}`)) continue;
+        await notion.request('POST', '/pages', { parent: { database_id: databaseId() }, properties: planProps(want, prefix) });
+        created += 1;
+      }
     }
     return { created, updated, deleted };
   }

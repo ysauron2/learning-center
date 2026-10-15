@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { HttpError, parse } from '../../core/errors.js';
-import { planBody, planUpdate, configBody, settingsBody } from './service.js';
+import { planBody, planUpdate, onceBody, configBody, settingsBody } from './service.js';
 
 const eventsQuery = z.object({
   days: z.coerce.number().int().min(1).max(31).default(7),
@@ -63,6 +63,13 @@ export function calendarRoutes(app, { calendar }) {
   app.patch('/calendar/plan/:id', async (req) => ({ data: calendar.updatePlan(idOf(req), parse(planUpdate, req.body)) }));
   app.delete('/calendar/plan/:id', async (req, reply) => {
     calendar.removePlan(idOf(req));
+    return reply.status(204).send();
+  });
+
+  app.get('/calendar/missed', async () => ({ data: calendar.missed() }));
+  app.post('/calendar/once', async (req, reply) => reply.status(201).send({ data: calendar.addOnce(parse(onceBody, req.body)) }));
+  app.delete('/calendar/once/:id', async (req, reply) => {
+    calendar.removeOnce(idOf(req));
     return reply.status(204).send();
   });
 

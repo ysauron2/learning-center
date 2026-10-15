@@ -158,11 +158,14 @@ export default function Focus() {
         if (!alive) return;
         if (active) { adopt(active); return; }
         const course = params.get('course');
-        if (params.get('auto') === '1' && course && !autoRan.current) {
+        // ?min=15|25|45 define a duração do pomodoro automático; qualquer outro valor é ignorado (25 min)
+        const minParam = Number(params.get('min'));
+        const autoMin = [15, 25, 45].includes(minParam) ? minParam : 25;
+        if (params.get('auto') === '1' && (course || params.get('min')) && !autoRan.current) {
           autoRan.current = true;
           const lesson = params.get('lesson');
           setParams({}, { replace: true });
-          await start({ courseId: Number(course), lessonId: lesson ? Number(lesson) : null, kind: 'pomodoro', plannedMin: 25 });
+          await start({ courseId: course ? Number(course) : null, lessonId: course && lesson ? Number(lesson) : null, kind: 'pomodoro', plannedMin: autoMin });
           return;
         }
         setPhase('idle');
