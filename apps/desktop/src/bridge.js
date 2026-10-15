@@ -16,6 +16,21 @@ export function isUdemyHost(url) {
   }
 }
 
+/**
+ * Páginas de login que a Udemy abre numa janela pequena ("Continuar com o Google/Apple/Facebook").
+ * Elas precisam abrir DENTRO do app: o resultado do login volta para a janela da Udemy por mensagem.
+ * Se abrissem no navegador do sistema, a janela da Udemy ficaria esperando para sempre (tela branca).
+ */
+const AUTH_HOSTS = new Set(['accounts.google.com', 'appleid.apple.com', 'www.facebook.com', 'm.facebook.com', 'web.facebook.com']);
+export function isAuthHost(url) {
+  try {
+    const u = new URL(url);
+    return u.protocol === 'https:' && AUTH_HOSTS.has(u.hostname);
+  } catch {
+    return false;
+  }
+}
+
 /** 'udemy' | 'app' | null, a partir do endereço de quem enviou a mensagem. */
 export function senderKind(url, appOrigin) {
   if (isUdemyHost(url)) return 'udemy';

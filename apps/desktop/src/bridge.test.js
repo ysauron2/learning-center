@@ -1,7 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createBridge, isUdemyHost, senderKind } from './bridge.js';
+import { createBridge, isUdemyHost, isAuthHost, senderKind } from './bridge.js';
 
 const API = 'http://127.0.0.1:38250';
+
+describe('isAuthHost', () => {
+  it('aceita só as páginas de login do Google, Apple e Facebook, por https', () => {
+    expect(isAuthHost('https://accounts.google.com/o/oauth2/auth?x=1')).toBe(true);
+    expect(isAuthHost('https://appleid.apple.com/auth/authorize')).toBe(true);
+    expect(isAuthHost('https://www.facebook.com/v2.0/dialog/oauth')).toBe(true);
+    expect(isAuthHost('http://accounts.google.com/')).toBe(false);
+    expect(isAuthHost('https://accounts.google.com.evil.com/')).toBe(false);
+    expect(isAuthHost('https://evil.com/accounts.google.com')).toBe(false);
+    expect(isAuthHost('https://google.com/')).toBe(false);
+    expect(isAuthHost('javascript:alert(1)')).toBe(false);
+    expect(isAuthHost(undefined)).toBe(false);
+  });
+});
 
 describe('isUdemyHost', () => {
   it('aceita só https em udemy.com e subdomínios', () => {

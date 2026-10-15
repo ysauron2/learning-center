@@ -36,7 +36,7 @@ São separados do modo navegador (`data/learning-center.db`). Para levar os dado
 
 ## Limites conhecidos
 
-- O login **"Entrar com o Google"** costuma ser bloqueado em janelas embutidas: use e-mail e senha na Udemy.
+- O login **"Continuar com o Google/Apple/Facebook"** abre numa janelinha dentro do app (a partir da 0.1.1; antes ficava em tela branca). Como o Google às vezes recusa navegadores embutidos, se não funcionar use e-mail e senha: quem criou a conta pelo Google pode definir uma senha em "Esqueci minha senha" na Udemy.
 - A Udemy pode pedir verificação de segurança; a pessoa resolve na própria janela.
 - Ler a Udemy de forma automatizada pode ser contra os termos de uso dela; é uso pessoal, por conta de quem usa.
 

@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain, Menu, shell } from 'electron';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join } from 'node:path';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-import { createBridge, senderKind, isUdemyHost } from './bridge.js';
+import { createBridge, senderKind, isUdemyHost, isAuthHost } from './bridge.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const dist = join(here, '..', 'dist');
@@ -94,10 +94,17 @@ function openUdemy() {
   });
   udemyWin.webContents.setUserAgent(browserUserAgent());
   // Links para fora da Udemy abrem no navegador do sistema; os da Udemy ficam nesta janela.
+  // Exceção: a janelinha de login (Google/Apple/Facebook) abre aqui dentro, com a mesma sessão, para o login voltar para a Udemy.
   udemyWin.webContents.setWindowOpenHandler(({ url }) => {
+    if (isAuthHost(url)) {
+      return { action: 'allow', overrideBrowserWindowOptions: { parent: udemyWin, width: 520, height: 720, title: 'Entrar · Lume', autoHideMenuBar: true } };
+    }
     if (isUdemyHost(url)) udemyWin.loadURL(url);
     else if (isHttp(url)) shell.openExternal(url);
     return { action: 'deny' };
+  });
+  udemyWin.webContents.on('did-create-window', (child) => {
+    child.webContents.setUserAgent(browserUserAgent());
   });
   udemyWin.loadURL(SMOKE ? 'about:blank' : UDEMY_HOME);
   udemyWin.on('closed', () => { udemyWin = null; });

@@ -1,6 +1,6 @@
 {
   "name": "@learning-center/desktop",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "description": "Lume · plataforma de estudos (app de desktop com a janela da Udemy embutida)",
