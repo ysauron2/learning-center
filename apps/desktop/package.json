@@ -1,0 +1,72 @@
+{
+  "name": "@learning-center/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Learning Center · app de desktop (Electron) com a janela da Udemy embutida",
+  "main": "src/main.js",
+  "scripts": {
+    "build": "node ../../scripts/build-desktop.mjs",
+    "start": "npm run build && electron .",
+    "test": "vitest run",
+    "dist": "npm run build && electron-builder"
+  },
+  "devDependencies": {
+    "electron": "44.7.2",
+    "electron-builder": "^26.15.3",
+    "esbuild": "^0.25.0",
+    "vitest": "^3.0.0"
+  },
+  "productName": "Learning Center",
+  "author": "Learning Center",
+  "build": {
+    "appId": "com.learningcenter.desktop",
+    "productName": "Learning Center",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "src/**/*",
+      "!src/**/*.test.js",
+      "dist/**/*",
+      "package.json",
+      "!adhoc-sign.cjs"
+    ],
+    "extraResources": [
+      {
+        "from": "../web/dist",
+        "to": "web"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "category": "public.app-category.education",
+      "identity": null
+    },
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+    "afterPack": "adhoc-sign.cjs",
+    "electronVersion": "44.7.2"
+  }
+}

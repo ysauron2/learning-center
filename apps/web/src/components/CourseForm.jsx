@@ -1,10 +1,11 @@
 import { useState } from 'react';
+import { ChoiceOrNew } from './ChoiceOrNew.jsx';
+import { useAsync } from '../lib/hooks.js';
 import { Modal } from './ui.jsx';
 import { api } from '../lib/api.js';
 import { STATUS_LABEL } from '../lib/format.js';
 
-const PLATFORMS = ['Udemy', 'Alura', 'Coursera', 'YouTube', 'Faculdade', 'NetAcad', 'Livro', 'Outro'];
-const CATEGORIES = ['Cibersegurança', 'Redes', 'Linux', 'Desenvolvimento', 'Certificação', 'Geral'];
+import { DEFAULT_PLATFORMS as PLATFORMS, DEFAULT_CATEGORIES as CATEGORIES } from '../lib/choices.js';
 
 /** Cadastro/edição manual de curso (não depende de nenhuma API externa). */
 export function CourseForm({ course, onClose, onSaved }) {
@@ -20,6 +21,7 @@ export function CourseForm({ course, onClose, onSaved }) {
     tags: (course?.tags ?? []).join(', '),
     manualProgress: course?.manualProgress ?? 0,
   });
+  const opts = useAsync(() => api.options(), []);
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -32,8 +34,8 @@ export function CourseForm({ course, onClose, onSaved }) {
     setError(null);
     const payload = {
       title: form.title,
-      platform: form.platform,
-      category: form.category,
+      platform: form.platform.trim() || 'Outro',
+      category: form.category.trim() || 'Geral',
       status: form.status,
       description: form.description,
       url: form.url.trim() || null,
@@ -62,16 +64,10 @@ export function CourseForm({ course, onClose, onSaved }) {
           {fieldError('title') && <span id="cf-title-err" className="error-text">{fieldError('title')}</span>}
         </div>
         <div className="row" style={{ alignItems: 'flex-start' }}>
-          <div className="field" style={{ flex: '1 1 200px' }}>
-            <label htmlFor="cf-platform">Plataforma</label>
-            <input id="cf-platform" className="input" list="cf-platforms" value={form.platform} onChange={set('platform')} />
-            <datalist id="cf-platforms">{PLATFORMS.map((p) => <option key={p} value={p} />)}</datalist>
-          </div>
-          <div className="field" style={{ flex: '1 1 200px' }}>
-            <label htmlFor="cf-category">Categoria</label>
-            <input id="cf-category" className="input" list="cf-categories" value={form.category} onChange={set('category')} />
-            <datalist id="cf-categories">{CATEGORIES.map((c) => <option key={c} value={c} />)}</datalist>
-          </div>
+          <ChoiceOrNew id="cf-platform" label="Plataforma" value={form.platform} options={opts.data ? opts.data.platforms.map((p) => p.name) : PLATFORMS}
+            onChange={(v) => setForm((f) => ({ ...f, platform: v }))} newLabel="Outra plataforma…" placeholder="Ex.: Domestika" />
+          <ChoiceOrNew id="cf-category" label="Categoria" value={form.category} options={opts.data ? opts.data.categories.map((c) => c.name) : CATEGORIES}
+            onChange={(v) => setForm((f) => ({ ...f, category: v }))} newLabel="Nova categoria…" placeholder="Ex.: Design" />
         </div>
         <div className="row" style={{ alignItems: 'flex-start' }}>
           <div className="field" style={{ flex: '1 1 200px' }}>

@@ -14,13 +14,19 @@ export async function buildApp({
   webDist,
   clock,
   logger = false,
+  migrationsDir,
+  googleFetch,
+  notionFetch,
+  notionPauseMs,
+  notionSleep,
+  autoSync = false,
 } = {}) {
   const app = Fastify({ logger });
   const db = openDb(databaseFile);
   app.decorate('db', db);
   app.addHook('onClose', async () => db.close());
 
-  await app.register(registerLearningCenter, { db, clock, prefix: '/api/v1' });
+  await app.register(registerLearningCenter, { db, clock, migrationsDir, googleFetch, notionFetch, notionPauseMs, notionSleep, autoSync, prefix: '/api/v1' });
 
   if (webDist && existsSync(resolve(webDist, 'index.html'))) {
     await app.register(fastifyStatic, { root: resolve(webDist) });

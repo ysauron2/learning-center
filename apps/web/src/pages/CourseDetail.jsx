@@ -6,6 +6,7 @@ import { formatMinutes, relativeDay } from '../lib/format.js';
 import { CourseArt } from '../components/CourseArt.jsx';
 import { Icon } from '../components/Icon.jsx';
 import { CourseForm } from '../components/CourseForm.jsx';
+import { CourseNotes } from '../components/CourseNotes.jsx';
 import { ErrorState, Modal, ProgressBar, Skeleton, StatusBadge, Toast } from '../components/ui.jsx';
 
 function InlineAdd({ placeholder, buttonLabel, onAdd, withDuration }) {
@@ -176,6 +177,7 @@ export default function CourseDetail() {
               <div className="row" style={{ justifyContent: 'space-between' }}><dt style={{ color: 'var(--text-2)' }}>Última atividade</dt><dd style={{ margin: 0, fontWeight: 700 }}>{course.lastStudiedAt ? relativeDay(course.lastStudiedAt) : '—'}</dd></div>
             </dl>
           </section>
+          <CourseNotes courseId={course.id} />
           <section className="card" aria-label="Gerenciar curso">
             <h2 className="card-title" style={{ marginBottom: 12 }}>Gerenciar</h2>
             <div className="row">

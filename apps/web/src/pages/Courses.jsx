@@ -5,6 +5,7 @@ import { useAsync, useDebounced, useToast } from '../lib/hooks.js';
 import { Icon } from '../components/Icon.jsx';
 import { CourseCard } from '../components/CourseCard.jsx';
 import { CourseForm } from '../components/CourseForm.jsx';
+import { ManageOptions } from '../components/ManageOptions.jsx';
 import { EmptyState, ErrorState, Skeleton, Toast } from '../components/ui.jsx';
 
 const STATUS_FILTERS = [
@@ -21,6 +22,7 @@ export default function Courses() {
   const [category, setCategory] = useState('');
   const [q, setQ] = useState('');
   const [adding, setAdding] = useState(false);
+  const [managing, setManaging] = useState(false);
   const [toast, showToast] = useToast();
   const navigate = useNavigate();
   const dq = useDebounced(q);
@@ -39,6 +41,7 @@ export default function Courses() {
           <p className="page-sub">Tudo o que você estuda, de qualquer plataforma, em um só lugar.</p>
         </div>
         <div className="row" style={{ gap: 8 }}>
+          <button className="btn" onClick={() => setManaging(true)}>Categorias e plataformas</button>
           <Link className="btn" to="/importar">Importar da Udemy</Link>
           <button className="btn btn-primary" onClick={() => setAdding(true)}><Icon name="plus" size={16} strokeWidth={2.4} />Adicionar curso</button>
         </div>
@@ -97,6 +100,12 @@ export default function Courses() {
 
       {adding && (
         <CourseForm onClose={() => setAdding(false)} onSaved={(c) => { setAdding(false); showToast('Curso adicionado'); summary.reload(); navigate(`/cursos/${c.id}`); }} />
+      )}
+      {managing && (
+        <ManageOptions
+          onClose={() => setManaging(false)}
+          onChanged={() => { setPlatform(''); setCategory(''); summary.reload(); list.reload(); }}
+        />
       )}
       <Toast message={toast} />
     </>

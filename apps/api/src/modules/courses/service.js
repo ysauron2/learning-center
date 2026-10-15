@@ -1,5 +1,6 @@
 import { transaction } from '../../core/db.js';
 import { notFound } from '../../core/errors.js';
+import { canonicalOption } from '../../core/options.js';
 import { courseCreate, courseUpdate } from './schemas.js';
 
 const COURSE_SELECT = `
@@ -152,6 +153,9 @@ export function createCoursesService(db, clock) {
     const input = courseCreate.parse(raw);
     const now = iso();
     return transaction(db, () => {
+      // usa o nome "oficial" da plataforma/categoria (e cadastra na lista se for nova)
+      const platform = canonicalOption(db, 'platform', input.platform) ?? 'Outro';
+      const category = canonicalOption(db, 'category', input.category) ?? 'Geral';
       const res = db
         .prepare(
           `INSERT INTO lc_courses (title, platform, category, description, url, image_url, status, manual_progress, created_at, updated_at)
@@ -159,8 +163,8 @@ export function createCoursesService(db, clock) {
         )
         .run(
           input.title,
-          input.platform,
-          input.category,
+          platform,
+          category,
           input.description,
           input.url ?? null,
           input.imageUrl ?? null,
@@ -198,6 +202,13 @@ export function createCoursesService(db, clock) {
     }
     return transaction(db, () => {
       if (sets.length || input.tags) {
+        // plataforma/categoria alteradas passam pelo nome oficial da lista
+        for (const [field, kind] of [['platform', 'platform'], ['category', 'category']]) {
+          if (input[field] !== undefined) {
+            const i = sets.indexOf(`${field} = ?`);
+            params[i] = canonicalOption(db, kind, input[field]) ?? params[i];
+          }
+        }
         sets.push('updated_at = ?');
         params.push(iso(), id);
         db.prepare(`UPDATE lc_courses SET ${sets.join(', ')} WHERE id = ?`).run(...params);

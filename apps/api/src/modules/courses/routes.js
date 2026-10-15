@@ -20,6 +20,7 @@ export function coursesRoutes(app, { courses, courseImporter, contentImporter })
   });
   app.post('/courses/import/preview', async (req) => ({ data: courseImporter.preview(parse(importBody, req.body)) }));
   app.post('/courses/import', async (req) => ({ data: courseImporter.run(parse(importBody, req.body)) }));
+  app.post('/courses/sync-content', async (req) => ({ data: contentImporter.sync(parse(contentBody, req.body)) }));
   app.post('/courses/:id/import-content/preview', async (req) => ({ data: contentImporter.preview(intParam(req), parse(contentBody, req.body)) }));
   app.post('/courses/:id/import-content', async (req) => ({ data: contentImporter.run(intParam(req), parse(contentBody, req.body)) }));
   app.get('/courses/:id', async (req) => ({ data: courses.get(intParam(req)) }));

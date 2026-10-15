@@ -112,9 +112,10 @@ button { cursor: pointer; }
   .bottom-nav {
     display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--surface);
     border-top: 1px solid var(--border); padding: 6px 8px calc(10px + env(safe-area-inset-bottom));
+    overflow-x: auto; /* com tantos itens, a barra rola para o lado */
   }
   .bottom-nav a, .bottom-nav button {
-    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    flex: 1 0 70px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
     min-height: 48px; font-size: 11px; font-weight: 600; color: var(--text-3); background: none; border: 0;
   }
   .bottom-nav .active { color: var(--brand-text); }
@@ -288,3 +289,104 @@ button { cursor: pointer; }
 .heat-cell[data-level='2'] { background: color-mix(in srgb, var(--brand) 50%, var(--track)); }
 .heat-cell[data-level='3'] { background: color-mix(in srgb, var(--brand) 75%, var(--track)); }
 .heat-cell[data-level='4'] { background: var(--brand); }
+
+/* Anotações */
+.notes-layout { display: grid; grid-template-columns: minmax(280px, 340px) minmax(0, 1fr); gap: 20px; align-items: start; }
+.notes-list { display: flex; flex-direction: column; }
+.note-items { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 8px; }
+.note-item { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 14px; color: var(--text); text-decoration: none; }
+.note-item:hover { background: var(--surface-2); }
+.note-item[aria-current='true'] { border-color: var(--brand); background: var(--brand-soft); }
+.note-excerpt { font-size: 13px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.note-editor { display: grid; gap: 16px; }
+.note-body { min-height: 340px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 14px; line-height: 1.6; }
+.note-preview { min-height: 340px; padding: 4px 2px; }
+.notes-placeholder { display: grid; place-items: center; min-height: 240px; }
+.notes-back { display: none; }
+@media (max-width: 860px) {
+  .notes-layout { grid-template-columns: 1fr; }
+  .notes-layout.has-editor .notes-list, .notes-layout:not(.has-editor) .notes-placeholder { display: none; }
+  .notes-back { display: inline-flex; }
+}
+.markdown { line-height: 1.7; overflow-wrap: anywhere; }
+.markdown > :first-child { margin-top: 0; }
+.markdown h1, .markdown h2, .markdown h3 { font-family: var(--font-display); line-height: 1.25; margin: 1.2em 0 .5em; }
+.markdown h1 { font-size: 24px; } .markdown h2 { font-size: 20px; } .markdown h3 { font-size: 17px; }
+.markdown p, .markdown ul, .markdown ol { margin: .6em 0; }
+.markdown pre { background: var(--surface-2); padding: 12px 14px; border-radius: 12px; overflow-x: auto; }
+.markdown code { background: var(--surface-2); padding: 1px 6px; border-radius: 6px; font-size: .92em; }
+.markdown pre code { background: none; padding: 0; }
+.markdown table { border-collapse: collapse; display: block; overflow-x: auto; }
+.markdown th, .markdown td { border: 1px solid var(--border); padding: 6px 12px; text-align: left; }
+.markdown blockquote { border-left: 3px solid var(--brand); margin: .8em 0; padding: 0 14px; color: var(--text-2); }
+.markdown a { color: var(--brand-text); text-decoration: underline; }
+.markdown input[type='checkbox'] { margin-right: 6px; }
+.md-img-blocked { color: var(--text-3); font-style: italic; }
+
+/* Trilhas */
+.track-card { display: flex; flex-direction: column; gap: 10px; }
+.track-desc { margin: 0; font-size: 14px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.track-steps { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 10px; }
+.track-step { display: flex; gap: 14px; align-items: flex-start; padding: 14px; border: 1px solid var(--border); border-radius: 16px; }
+.track-step.next { border-color: var(--brand); background: var(--brand-soft); }
+.track-step.done .step-num { background: var(--green-soft); color: var(--green); }
+.step-num { flex: 0 0 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; background: var(--surface-2); color: var(--text-2); }
+.step-main { flex: 1; min-width: 0; display: grid; gap: 8px; }
+.step-actions { display: flex; gap: 6px; }
+@media (max-width: 560px) { .track-step { flex-wrap: wrap; } .step-actions { width: 100%; justify-content: flex-end; } }
+
+/* Trilhas · explicação e assistente */
+.track-intro { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 28px; align-items: center; }
+@media (max-width: 860px) { .track-intro { grid-template-columns: 1fr; } }
+.track-intro p { margin: 8px 0; line-height: 1.6; }
+.track-howto { margin: 8px 0 0; padding-left: 20px; line-height: 1.7; }
+.track-example { background: var(--surface-2); border: 1px dashed var(--border-strong); border-radius: 16px; padding: 16px; display: grid; gap: 10px; }
+.track-example ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.track-example li { display: flex; gap: 12px; align-items: flex-start; padding: 10px; border-radius: 12px; }
+.track-example li.next { background: var(--brand-soft); }
+.track-hint ul { margin: 10px 0; padding-left: 20px; line-height: 1.7; }
+.track-hint-try { margin: 8px 0 12px; padding: 10px 12px; background: var(--brand-soft); border-radius: 12px; line-height: 1.6; }
+.wizard-courses { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; max-height: 280px; overflow-y: auto; }
+.wizard-course { display: flex; gap: 12px; align-items: center; padding: 10px 12px; border: 1px solid var(--border); border-radius: 12px; cursor: pointer; }
+.wizard-course.on { border-color: var(--brand); background: var(--brand-soft); }
+.wizard-num { flex: 0 0 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 13px; background: var(--surface-2); color: var(--brand-text); }
+.wizard-course.on .wizard-num { background: var(--brand); color: #fff; }
+
+/* Categorias e plataformas */
+.opt-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; max-height: 320px; overflow-y: auto; }
+.opt-row { display: flex; gap: 8px; align-items: center; padding: 10px 12px; border: 1px solid var(--border); border-radius: 12px; }
+
+/* Agenda */
+.agenda-card { display: grid; gap: 4px; }
+.agenda-cta { display: grid; gap: 12px; margin-top: 12px; justify-items: start; }
+.agenda-days { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-top: 14px; }
+.agenda-day h3 { margin: 0 0 8px; font-size: 13px; color: var(--text-2); }
+.agenda-day ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.agenda-day li { display: flex; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 10px; background: var(--surface-2); font-size: 14px; }
+.agenda-day li.study { background: var(--brand-soft); }
+.agenda-day a { color: inherit; text-decoration: none; font-weight: 600; }
+.agenda-day a:hover { text-decoration: underline; }
+.agenda-time { font-size: 12px; color: var(--text-3); min-width: 88px; font-variant-numeric: tabular-nums; }
+.agenda-local { display: grid; gap: 14px; margin-top: 12px; }
+.agenda-sources .chip { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; background: var(--brand-soft); }
+.agenda-next { display: flex; gap: 16px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 14px 16px; border-radius: 14px; background: var(--brand-soft); }
+.agenda-next-when { font-size: 12px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: .04em; }
+.agenda-next-title { font-size: 17px; font-weight: 700; }
+.week-strip { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+.week-day { display: grid; gap: 4px; align-content: start; justify-items: center; min-height: 92px; padding: 10px 6px; border-radius: 12px; background: var(--surface-2); text-align: center; }
+.week-day.today { outline: 2px solid var(--brand); }
+.week-day-name { font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-2); }
+.week-day-date { font-size: 12px; color: var(--text-3); }
+.week-day-empty { color: var(--text-3); }
+.week-item { font-size: 12px; font-weight: 700; padding: 3px 6px; border-radius: 8px; background: var(--brand-soft); font-variant-numeric: tabular-nums; }
+.week-item.session { background: transparent; color: var(--text-2); }
+@media (max-width: 640px) { .week-strip { grid-template-columns: repeat(auto-fit, minmax(64px, 1fr)); } }
+.agenda-guide { background: var(--surface-2); border-radius: 14px; padding: 14px 16px; margin: 12px 0; }
+.agenda-guide ol { margin: 8px 0; padding-left: 20px; line-height: 1.7; }
+.plan-list { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 8px; }
+.plan-list li { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border: 1px solid var(--border); border-radius: 12px; }
+.plan-form { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+
+.agenda-steps { margin: 0 0 14px; padding-left: 20px; line-height: 1.7; }
+.agenda-url { display: inline-block; max-width: 100%; overflow-x: auto; padding: 6px 10px; border-radius: 8px; background: var(--surface-2); font-size: 13px; }
+.agenda-redirect { margin: 12px 0; padding: 12px 14px; border-radius: 12px; background: var(--brand-soft); line-height: 1.6; }

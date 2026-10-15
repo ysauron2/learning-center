@@ -74,6 +74,17 @@ describe('importação de cursos da Udemy', () => {
     expect(again.body.data).toMatchObject({ created: 0, skipped: 1 });
   });
 
+  it('a categoria escolhida vale só para os cursos novos; sem ela, "Geral"', async () => {
+    await ctx.call('POST', '/courses/import', { items: [item('a')] });
+    const r = await ctx.call('POST', '/courses/import', { category: '  Segurança  ', items: [item('a'), item('b')] });
+    expect(r.body.data.created).toBe(1);
+    const by = Object.fromEntries((await ctx.call('GET', '/courses')).body.data.map((c) => [c.title, c.category]));
+    expect(by['Curso a']).toBe('Geral'); // já existia: não muda
+    expect(by['Curso b']).toBe('Segurança');
+    expect((await ctx.call('POST', '/courses/import', { category: '', items: [item('c')] })).status).toBe(400);
+    expect((await ctx.call('POST', '/courses/import', { category: 'x'.repeat(61), items: [item('c')] })).status).toBe(400);
+  });
+
   it('rodar a importação duas vezes não duplica nem altera cursos existentes', async () => {
     const body = { items: [item('a', { progress: 10 })] };
     await ctx.call('POST', '/courses/import', body);

@@ -11,12 +11,20 @@ describe('prévia da importação de cursos', () => {
   it('só cursos novos, e os dois juntos', () => {
     expect(hasWork(p(3, 0))).toBe(true);
     expect(confirmLabel(p(3, 0))).toBe('Importar 3 curso(s)');
-    expect(confirmLabel(p(2, 4))).toBe('Importar 2 curso(s) e preencher 4 capa(s)');
+    expect(confirmLabel(p(2, 4))).toBe('Importar 2 curso(s) e atualizar o resto');
   });
   it('nada novo e nenhuma capa: botão bloqueado e texto neutro', () => {
     expect(hasWork(p(0, 0))).toBe(false);
     expect(confirmLabel(p(0, 0))).toBe('Nada a importar');
   });
+  it('só progressos a atualizar também é trabalho', () => {
+    const q = { new: [], imagesToFill: 0, progressToUpdate: 3 };
+    expect(hasWork(q)).toBe(true);
+    expect(confirmLabel(q)).toBe('Atualizar 3 progresso(s)');
+    expect(confirmLabel({ ...q, imagesToFill: 2 })).toBe('Atualizar 3 progresso(s) e 2 capa(s)');
+    expect(confirmLabel({ new: [{}], imagesToFill: 0, progressToUpdate: 3 })).toBe('Importar 1 curso(s) e atualizar o resto');
+  });
+
   it('resposta sem imagesToFill (API antiga) não quebra', () => {
     expect(hasWork({ new: [] })).toBe(false);
     expect(confirmLabel({ new: [{}] })).toBe('Importar 1 curso(s)');

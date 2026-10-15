@@ -63,3 +63,14 @@ A extensão lê também a imagem de capa de cada cartão de "Meus cursos". O app
 
 - Cursos já cadastrados sem capa ganham uma ao reimportar em "Meus cursos" (nunca trocamos uma capa existente).
 - Também dá para definir ou limpar a capa manualmente em "Editar curso" (campo "Imagem de capa", só https).
+
+## Sincronização automática
+
+Com o interruptor **"Sincronizar automaticamente"** (canto da página da Udemy, abaixo do botão roxo) ligado, a extensão envia sozinha ao app local o que lê, sem prévia:
+
+- **Em "Meu aprendizado":** cursos novos, progresso atualizado (só sobe, em cursos sem aulas) e capas que faltam.
+- **No player de um curso:** módulos e aulas novos e as aulas que você concluiu. Dispara ao abrir o curso, ao mudar de aula e alguns segundos depois de marcar uma aula como vista.
+
+Como é seguro: só soma (nunca apaga, renomeia nem desmarca); se o app não tiver certeza de qual curso é, **não grava** e o aviso pede para usar o botão "Importar conteúdo deste curso" (que pergunta o destino e passa a lembrar). O mesmo conteúdo não é reenviado, e avisos só aparecem quando houve novidade (ou para dizer que o app está fechado, no máximo a cada 10 minutos).
+
+Permissões: a extensão pode falar com o endereço do app (`host_permissions`, por padrão `http://localhost:3000`) e com mais nada; quem fala com o app é o serviço de fundo, e a Udemy nunca recebe nada. O interruptor começa **desligado**. Se o app estiver fechado, abra o atalho "Learning Center" na área de trabalho.

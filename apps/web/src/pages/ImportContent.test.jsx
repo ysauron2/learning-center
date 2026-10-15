@@ -57,7 +57,7 @@ describe('página Importar conteúdo', () => {
     await mount();
     await send(msg);
     expect(container.querySelector('#dest').value).toBe('2');
-    expect(api.importContentPreview).toHaveBeenCalledWith(2, content.modules);
+    expect(api.importContentPreview).toHaveBeenCalledWith(2, content.modules, content.url);
     expect(container.textContent).toContain('Vai criar 1 módulo(s) e 2 aula(s)');
     expect(container.textContent).toContain('1 de 2 aulas concluídas (50%)');
   });
@@ -82,7 +82,7 @@ describe('página Importar conteúdo', () => {
       select.dispatchEvent(new Event('change', { bubbles: true }));
     });
     await flush();
-    expect(api.importContentPreview).toHaveBeenCalledWith(1, content.modules);
+    expect(api.importContentPreview).toHaveBeenCalledWith(1, content.modules, '');
     expect(btn().disabled).toBe(false);
   });
 
@@ -92,7 +92,7 @@ describe('página Importar conteúdo', () => {
     const btn = [...container.querySelectorAll('button')].find((b) => b.textContent.includes('Importar conteúdo'));
     await act(async () => { btn.click(); });
     await flush();
-    expect(api.importContent).toHaveBeenCalledWith(2, content.modules);
+    expect(api.importContent).toHaveBeenCalledWith(2, content.modules, content.url);
     expect(container.textContent).toContain('Pronto!');
     expect(container.querySelector('a[href="/cursos/2"]')).not.toBeNull();
   });

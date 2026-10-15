@@ -3,6 +3,10 @@ import { Link } from 'react-router-dom';
 import { api } from '../lib/api.js';
 import { buildBookmarklet, parseImportMessage, parseExtensionMessage } from '../lib/bookmarklet.js';
 import { hasWork, confirmLabel } from '../lib/import-preview.js';
+import { DesktopUdemy, isDesktop } from '../components/DesktopUdemy.jsx';
+import { ChoiceOrNew } from '../components/ChoiceOrNew.jsx';
+import { DEFAULT_CATEGORIES } from '../lib/choices.js';
+import { useAsync } from '../lib/hooks.js';
 import { ErrorState, ProgressBar } from '../components/ui.jsx';
 
 export default function ImportUdemy() {
@@ -12,6 +16,8 @@ export default function ImportUdemy() {
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
   const linkRef = useRef(null);
+  const [category, setCategory] = useState('Geral');
+  const opts = useAsync(() => api.options(), []);
 
   // O endereço javascript: é aplicado por fora do React (que avisa/bloqueia esse tipo de href).
   useEffect(() => {
@@ -42,7 +48,7 @@ export default function ImportUdemy() {
     setBusy(true);
     setError(null);
     try {
-      setResult(await api.importCourses(items));
+      setResult(await api.importCourses(items, category.trim() || undefined));
       setPreview(null);
       setItems(null);
     } catch (err) {
@@ -70,7 +76,7 @@ export default function ImportUdemy() {
       {result && (
         <section className="card" role="status" aria-live="polite">
           <h2 className="card-title">Pronto!</h2>
-          <p>{result.created} curso(s) importado(s){result.skipped ? `, ${result.skipped} já existia(m)` : ''}{result.imagesFilled ? `, ${result.imagesFilled} capa(s) preenchida(s)` : ''}.</p>
+          <p>{result.created} curso(s) importado(s){result.skipped ? `, ${result.skipped} já existia(m)` : ''}{result.imagesFilled ? `, ${result.imagesFilled} capa(s) preenchida(s)` : ''}{result.progressUpdated ? `, ${result.progressUpdated} progresso(s) atualizado(s)` : ''}.</p>
           <Link className="btn btn-primary" to="/cursos" style={{ marginTop: 12 }}>Ver meus cursos</Link>
         </section>
       )}
@@ -82,7 +88,14 @@ export default function ImportUdemy() {
             {preview.new.length} novo(s) · {preview.existing.length} já cadastrado(s) (serão ignorados)
             {preview.invalid.length ? ` · ${preview.invalid.length} ignorado(s) por link inválido` : ''}
             {preview.imagesToFill ? ` · ${preview.imagesToFill} capa(s) serão preenchidas em cursos já cadastrados` : ''}
+            {preview.progressToUpdate ? ` · ${preview.progressToUpdate} progresso(s) serão atualizados` : ''}
           </p>
+          {preview.new.length > 0 && (
+            <div style={{ marginTop: 12, maxWidth: 360 }}>
+              <ChoiceOrNew id="imp-category" label="Categoria dos cursos novos" value={category} options={opts.data ? opts.data.categories.map((c) => c.name) : DEFAULT_CATEGORIES}
+                onChange={setCategory} newLabel="Nova categoria…" placeholder="Ex.: Design" />
+            </div>
+          )}
           {preview.new.length > 0 && (
             <ul className="list" style={{ margin: '12px 0', padding: 0, listStyle: 'none' }}>
               {preview.new.map((c) => (
@@ -102,7 +115,9 @@ export default function ImportUdemy() {
         </section>
       )}
 
-      {!preview && !result && (
+      {!preview && !result && isDesktop() && <DesktopUdemy />}
+
+      {!preview && !result && !isDesktop() && (
         <section className="card" aria-label="Como importar">
           <h2 className="card-title">Como importar (extensão do navegador)</h2>
           <ol style={{ paddingLeft: 20, lineHeight: 1.7 }}>

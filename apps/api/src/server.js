@@ -9,7 +9,7 @@ const host = process.env.HOST ?? '0.0.0.0';
 const databaseFile = resolve(process.env.DATABASE_FILE ?? resolve(root, 'data/learning-center.db'));
 const webDist = resolve(process.env.WEB_DIST ?? resolve(root, 'apps/web/dist'));
 
-const app = await buildApp({ databaseFile, webDist, logger: { level: process.env.LOG_LEVEL ?? 'info' } });
+const app = await buildApp({ databaseFile, webDist, autoSync: true, logger: { level: process.env.LOG_LEVEL ?? 'info' } });
 
 const shutdown = async (signal) => {
   app.log.info({ signal }, 'encerrando');

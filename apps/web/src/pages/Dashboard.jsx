@@ -5,6 +5,7 @@ import { useAsync, useToast } from '../lib/hooks.js';
 import { formatMinutes, relativeDay, greeting } from '../lib/format.js';
 import { Icon } from '../components/Icon.jsx';
 import { CourseForm } from '../components/CourseForm.jsx';
+import { AgendaCard } from '../components/AgendaCard.jsx';
 import { EmptyState, ErrorState, Modal, ProgressBar, Skeleton, Toast } from '../components/ui.jsx';
 
 function NextAction({ action, onAddCourse }) {
@@ -139,6 +140,8 @@ export default function Dashboard() {
           </div>
         </section>
       </div>
+
+      <AgendaCard />
 
       <div className="dash-bottom">
         <section className="card" aria-label="Horas por dia">

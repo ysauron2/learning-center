@@ -47,25 +47,40 @@ const importItem = z.object({
   imageUrl: z.string().max(2000).optional(),
 });
 
-export const importBody = z.object({ items: z.array(importItem).min(1).max(500) });
+export const importBody = z.object({
+  items: z.array(importItem).min(1).max(500),
+  /** Sobe o progresso de cursos existentes sem aulas (nunca desce). Desligado por padrão. */
+  updateProgress: z.boolean().optional(),
+  /** Categoria dos cursos NOVOS (padrão: Geral). Cursos existentes não são alterados. */
+  category: z.string().trim().min(1).max(60).optional(),
+});
 
 const statusFor = (progress) => (progress >= 100 ? 'completed' : progress > 0 ? 'active' : 'planned');
 
 export function createCourseImporter(db, courses) {
   function existingKeys() {
     const map = new Map();
-    for (const r of db.prepare('SELECT id, url, image_url FROM lc_courses WHERE url IS NOT NULL').all()) {
+    const rows = db
+      .prepare(
+        `SELECT id, url, image_url, status, manual_progress,
+          (SELECT COUNT(*) FROM lc_lessons l WHERE l.course_id = lc_courses.id) AS n_lessons
+         FROM lc_courses WHERE url IS NOT NULL`,
+      )
+      .all();
+    for (const r of rows) {
       const k = udemyKey(r.url);
-      if (k && !map.has(k)) map.set(k, { id: r.id, hasImage: Boolean(r.image_url) });
+      if (k && !map.has(k)) {
+        map.set(k, { id: r.id, hasImage: Boolean(r.image_url), status: r.status, progress: r.manual_progress, hasLessons: r.n_lessons > 0 });
+      }
     }
     return map;
   }
 
   /** Classifica cada item em novo / já existente / inválido, sem gravar nada. */
-  function classify({ items }) {
+  function classify({ items, updateProgress }) {
     const known = existingKeys();
     const seen = new Set();
-    const out = { new: [], existing: [], invalid: [], fill: [] };
+    const out = { new: [], existing: [], invalid: [], fill: [], progress: [] };
     for (const it of items) {
       const key = udemyKey(it.url);
       if (!key) {
@@ -73,6 +88,10 @@ export function createCourseImporter(db, courses) {
       } else if (known.has(key)) {
         const ex = known.get(key);
         out.existing.push({ title: it.title, url: canonicalUrl(key), courseId: ex.id });
+        // só sobe o progresso de curso sem aulas (com aulas, o progresso vem delas)
+        if (updateProgress && !ex.hasLessons && it.progress > ex.progress && !out.progress.some((q) => q.courseId === ex.id)) {
+          out.progress.push({ courseId: ex.id, progress: it.progress, status: it.progress >= 100 ? 'completed' : ex.status === 'planned' ? 'active' : ex.status });
+        }
         const img = safeImage(it.imageUrl);
         if (img && !ex.hasImage && !out.fill.some((f) => f.courseId === ex.id)) out.fill.push({ courseId: ex.id, imageUrl: img });
       } else if (seen.has(key)) {
@@ -95,8 +114,8 @@ export function createCourseImporter(db, courses) {
 
   function preview(body) {
     const r = classify(body);
-    const { fill, ...rest } = r;
-    return { ...rest, new: r.new.map(({ key, imageUrl, ...c }) => ({ ...c, hasImage: Boolean(imageUrl) })), imagesToFill: fill.length };
+    const { fill, progress, ...rest } = r;
+    return { ...rest, new: r.new.map(({ key, imageUrl, ...c }) => ({ ...c, hasImage: Boolean(imageUrl) })), imagesToFill: fill.length, progressToUpdate: progress.length };
   }
 
   function run(body) {
@@ -111,13 +130,15 @@ export function createCourseImporter(db, courses) {
           manualProgress: c.progress,
           description: c.instructor ? `Instrutor: ${c.instructor}` : '',
           imageUrl: c.imageUrl,
+          category: body.category,
         }).id,
       );
       // cursos que já existem só ganham imagem se não tinham; nunca trocamos uma existente
       r.fill.forEach((f) => courses.update(f.courseId, { imageUrl: f.imageUrl }));
+      r.progress.forEach((q) => courses.update(q.courseId, { manualProgress: q.progress, status: q.status }));
       return created;
     });
-    return { created: ids.length, skipped: r.existing.length, invalid: r.invalid.length, imagesFilled: r.fill.length, ids };
+    return { created: ids.length, skipped: r.existing.length, invalid: r.invalid.length, imagesFilled: r.fill.length, progressUpdated: r.progress.length, ids };
   }
 
   return { preview, run };

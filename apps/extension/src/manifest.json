@@ -3,10 +3,33 @@
   "name": "Learning Center · Importar da Udemy",
   "version": "0.1.0",
   "description": "Lê a página Meus cursos da Udemy (você já logado) e leva a lista para o seu Learning Center local.",
-  "permissions": ["storage"],
-  "background": { "service_worker": "background.js" },
+  "permissions": [
+    "storage"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "content_scripts": [
-    { "matches": ["https://*.udemy.com/*"], "js": ["content-udemy.js"], "run_at": "document_idle" },
-    { "matches": ["__APP_ORIGIN__/importar*"], "js": ["content-app.js"], "run_at": "document_start" }
+    {
+      "matches": [
+        "https://*.udemy.com/*"
+      ],
+      "js": [
+        "content-udemy.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "__APP_ORIGIN__/importar*"
+      ],
+      "js": [
+        "content-app.js"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "host_permissions": [
+    "__APP_ORIGIN__/*"
   ]
 }

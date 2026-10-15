@@ -12,7 +12,8 @@ describe('build da extensão', () => {
     expect(m.manifest_version).toBe(3);
     expect(m.content_scripts[1].matches).toEqual([`${APP}/importar*`]);
     expect(m.permissions).toEqual(['storage']);
-    expect(m.host_permissions).toBeUndefined();
+    // única permissão de rede: o próprio app local (nada da Udemy nem de terceiros)
+    expect(m.host_permissions).toEqual([`${APP}/*`]);
     expect(JSON.stringify(m)).not.toContain('__APP_ORIGIN__');
   });
 

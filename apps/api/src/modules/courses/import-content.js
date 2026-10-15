@@ -15,8 +15,21 @@ const moduleItem = z.object({
 });
 
 export const contentBody = z
-  .object({ modules: z.array(moduleItem).min(1).max(200) })
+  .object({
+    modules: z.array(moduleItem).min(1).max(200),
+    /** Título e endereço do curso na Udemy: servem para reconhecer (e lembrar) qual curso é. */
+    title: z.string().max(300).optional(),
+    url: z.string().max(500).optional(),
+  })
   .refine((b) => b.modules.reduce((n, m) => n + m.lessons.length, 0) <= MAX_LESSONS_TOTAL, 'Aulas demais.');
+
+const fold = (s) => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+
+/** /course/<slug>/... → slug (minúsculo) ou null */
+export function slugOf(url) {
+  const m = (url || '').match(/\/course\/([^/?#]+)/i);
+  return m ? decodeURIComponent(m[1]).toLowerCase() : null;
+}
 
 const norm = (s) => s.normalize('NFKC').toLowerCase().replace(/\s+/g, ' ').trim();
 
@@ -37,6 +50,30 @@ function keyed(items) {
  * renomeia nem desmarca nada que o usuário já tenha.
  */
 export function createContentImporter(db, courses) {
+  /** Guarda o slug no curso, se ele ainda não tem um e nenhum outro curso já usa esse slug. */
+  function learnSlug(courseId, url) {
+    const slug = slugOf(url);
+    if (!slug) return;
+    db.prepare('UPDATE lc_courses SET udemy_slug = ? WHERE id = ? AND udemy_slug IS NULL AND NOT EXISTS (SELECT 1 FROM lc_courses WHERE udemy_slug = ?)').run(slug, courseId, slug);
+  }
+
+  /** Descobre qual curso do app é este: slug lembrado, endereço, título igual, título contido (se único). */
+  function findCourse({ title, url }) {
+    const rows = db.prepare('SELECT id, title, url, udemy_slug FROM lc_courses').all();
+    const slug = slugOf(url);
+    if (slug) {
+      const hit = rows.find((r) => r.udemy_slug === slug) ?? rows.find((r) => slugOf(r.url) === slug);
+      if (hit) return { id: hit.id };
+    }
+    const t = fold(title);
+    if (!t) return { candidates: [] };
+    const exact = rows.filter((r) => fold(r.title) === t);
+    if (exact.length === 1) return { id: exact[0].id };
+    const partial = exact.length ? exact : rows.filter((r) => t.length >= 8 && fold(r.title).length >= 8 && (fold(r.title).includes(t) || t.includes(fold(r.title))));
+    if (partial.length === 1) return { id: partial[0].id };
+    return { candidates: partial.slice(0, 5).map((r) => ({ id: r.id, title: r.title })) };
+  }
+
   function plan(courseId, body) {
     const course = courses.get(courseId); // 404 se não existir
     const existingModules = new Map(keyed(course.modules).map((m) => [m.key, m]));
@@ -71,6 +108,7 @@ export function createContentImporter(db, courses) {
   function run(courseId, body) {
     const { summary, modules } = plan(courseId, body);
     transaction(db, () => {
+      learnSlug(courseId, body.url);
       for (const m of modules) {
         const moduleId = m.existing ? m.existing.id : courses.addModule(courseId, { title: m.title }).id;
         for (const l of m.lessons) {
@@ -89,5 +127,13 @@ export function createContentImporter(db, courses) {
     return summary;
   }
 
-  return { preview, run };
+  /** Sincronização automática: acha o curso sozinho e importa; se houver dúvida, não grava nada. */
+  function sync(body) {
+    const found = findCourse(body);
+    if (!found.id) return { matched: false, candidates: found.candidates ?? [] };
+    const summary = run(found.id, body);
+    return { matched: true, courseId: found.id, courseTitle: courses.get(found.id).title, summary };
+  }
+
+  return { preview, run, sync };
 }

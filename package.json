@@ -4,8 +4,12 @@
   "private": true,
   "type": "module",
   "description": "Meu Hub — Learning Center: plataforma pessoal de estudos (MVP)",
-  "engines": { "node": ">=22.13" },
-  "workspaces": ["apps/*"],
+  "engines": {
+    "node": ">=22.13"
+  },
+  "workspaces": [
+    "apps/*"
+  ],
   "scripts": {
     "dev:api": "npm run dev -w @learning-center/api",
     "dev:web": "npm run dev -w @learning-center/web",
@@ -13,6 +17,9 @@
     "start": "npm run start -w @learning-center/api",
     "test": "npm run test --workspaces --if-present",
     "seed:demo": "npm run seed:demo -w @learning-center/api",
-    "build:extension": "node scripts/build-extension.mjs"
+    "build:extension": "node scripts/build-extension.mjs",
+    "desktop": "npm run build && npm start -w @learning-center/desktop",
+    "build:desktop": "node scripts/build-desktop.mjs",
+    "dist:desktop": "npm run build && npm run dist -w @learning-center/desktop"
   }
 }

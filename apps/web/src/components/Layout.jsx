@@ -1,18 +1,20 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { Icon } from './Icon.jsx';
 import { useTheme } from '../lib/hooks.js';
+import { isDesktop, openUdemy } from './DesktopUdemy.jsx';
 
 const ACTIVE = [
   { to: '/', label: 'Learning Center', icon: 'book', end: true },
   { to: '/cursos', label: 'Cursos', icon: 'courses' },
+  { to: '/trilhas', label: 'Trilhas', icon: 'route' },
   { to: '/foco', label: 'Sessões de foco', icon: 'timer' },
+  { to: '/anotacoes', label: 'Anotações', icon: 'note' },
   { to: '/analytics', label: 'Analytics', icon: 'chart' },
+  { to: '/agenda', label: 'Agenda', icon: 'clock' },
+  { to: '/backup', label: 'Backup', icon: 'cube' },
 ];
 const SOON = [
-  { label: 'Trilhas', icon: 'route' },
   { label: 'Certificações', icon: 'award' },
-  { label: 'Anotações', icon: 'note' },
-  { label: 'Laboratórios', icon: 'flask' },
   { label: 'Tutor IA', icon: 'sparkle' },
 ];
 
@@ -31,6 +33,9 @@ export function Layout() {
             <Icon name={i.icon} />{i.label}
           </NavLink>
         ))}
+        {isDesktop() && (
+          <button className="nav-link" onClick={openUdemy}><Icon name="play" />Abrir a Udemy</button>
+        )}
         {SOON.map((i) => (
           <span key={i.label} className="nav-link" aria-disabled="true">
             <Icon name={i.icon} />{i.label}<span className="nav-soon">EM BREVE</span>
@@ -51,8 +56,11 @@ export function Layout() {
       <nav className="bottom-nav" aria-label="Navegação">
         <NavLink to="/" end className={({ isActive }) => (isActive ? 'active' : '')}><Icon name="home" size={22} />Início</NavLink>
         <NavLink to="/cursos" className={({ isActive }) => (isActive ? 'active' : '')}><Icon name="courses" size={22} />Cursos</NavLink>
+        <NavLink to="/trilhas" className={({ isActive }) => (isActive ? 'active' : '')}><Icon name="route" size={22} />Trilhas</NavLink>
         <NavLink to="/foco" className={({ isActive }) => (isActive ? 'active' : '')}><Icon name="timer" size={22} />Foco</NavLink>
+        <NavLink to="/anotacoes" className={({ isActive }) => (isActive ? 'active' : '')}><Icon name="note" size={22} />Notas</NavLink>
         <NavLink to="/analytics" className={({ isActive }) => (isActive ? 'active' : '')}><Icon name="chart" size={22} />Analytics</NavLink>
+        <NavLink to="/agenda" className={({ isActive }) => (isActive ? 'active' : '')}><Icon name="clock" size={22} />Agenda</NavLink>
         <button onClick={toggleTheme} aria-label={themeLabel}><Icon name={theme === 'dark' ? 'sun' : 'moon'} size={22} />Tema</button>
       </nav>
     </div>

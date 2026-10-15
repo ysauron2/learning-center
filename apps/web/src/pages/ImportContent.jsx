@@ -4,6 +4,7 @@ import { api } from '../lib/api.js';
 import { useAsync } from '../lib/hooks.js';
 import { countLessons, matchCourse, parseContentMessage } from '../lib/content-import.js';
 import { ErrorState, ProgressBar } from '../components/ui.jsx';
+import { DesktopUdemy, isDesktop } from '../components/DesktopUdemy.jsx';
 
 export default function ImportContent() {
   const [content, setContent] = useState(null);
@@ -44,7 +45,7 @@ export default function ImportContent() {
       return undefined;
     }
     let alive = true;
-    api.importContentPreview(Number(courseId), content.modules)
+    api.importContentPreview(Number(courseId), content.modules, content.url)
       .then((p) => { if (alive) { setPreview(p); setError(null); } })
       .catch((err) => { if (alive) setError(err); });
     return () => { alive = false; };
@@ -54,7 +55,7 @@ export default function ImportContent() {
     setBusy(true);
     setError(null);
     try {
-      const done = await api.importContent(Number(courseId), content.modules);
+      const done = await api.importContent(Number(courseId), content.modules, content.url);
       setResult({ ...done, courseId: Number(courseId) });
       setContent(null);
       setPreview(null);
@@ -126,7 +127,9 @@ export default function ImportContent() {
         </section>
       )}
 
-      {!content && !result && (
+      {!content && !result && isDesktop() && <DesktopUdemy />}
+
+      {!content && !result && !isDesktop() && (
         <section className="card" aria-label="Como importar o conteúdo">
           <h2 className="card-title">Como importar (um clique por curso)</h2>
           <ol style={{ paddingLeft: 20, lineHeight: 1.7 }}>

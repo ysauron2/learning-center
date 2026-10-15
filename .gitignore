@@ -11,3 +11,6 @@ coverage/
 # Chaves/pacotes gerados ao empacotar a extensão (nunca versionar)
 *.pem
 *.crx
+
+# Instaladores gerados
+apps/desktop/release/

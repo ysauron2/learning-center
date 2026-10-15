@@ -4,7 +4,7 @@ import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 
-vi.mock('../lib/api.js', () => ({ api: { importPreview: vi.fn(), importCourses: vi.fn() } }));
+vi.mock('../lib/api.js', () => ({ api: { importPreview: vi.fn(), importCourses: vi.fn(), options: vi.fn().mockResolvedValue({ categories: ['Cibersegurança', 'Design', 'Geral'].map((name) => ({ name, count: 0, protected: false })), platforms: [] }) } }));
 import { api } from '../lib/api.js';
 import ImportUdemy from './ImportUdemy.jsx';
 
@@ -40,7 +40,7 @@ describe('página Importar da Udemy · botão de confirmar', () => {
     await mountAndReceive({ new: [], existing: [{}], invalid: [], imagesToFill: 5 });
     await act(async () => { confirmBtn().click(); });
     await flush();
-    expect(api.importCourses).toHaveBeenCalledWith(items);
+    expect(api.importCourses).toHaveBeenCalledWith(items, 'Geral');
     expect(container.textContent).toContain('5 capa(s) preenchida(s)');
   });
 
@@ -48,6 +48,31 @@ describe('página Importar da Udemy · botão de confirmar', () => {
     await mountAndReceive({ new: [], existing: [{}], invalid: [], imagesToFill: 0 });
     expect(confirmBtn().disabled).toBe(true);
     expect(confirmBtn().textContent).toBe('Nada a importar');
+  });
+
+  it('com cursos novos, permite escolher a categoria (existente ou nova) e envia junto', async () => {
+    api.importCourses.mockResolvedValue({ created: 1, skipped: 0, invalid: 0, ids: [] });
+    await mountAndReceive({ new: [{ title: 'A', url: 'u', progress: 5, hasImage: true }], existing: [], invalid: [], imagesToFill: 0 });
+    const sel = container.querySelector('#imp-category');
+    expect(sel.value).toBe('Geral');
+    expect([...sel.options].map((o) => o.textContent)).toEqual(expect.arrayContaining(['Cibersegurança', 'Design', '➕ Nova categoria…']));
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(sel, '__new__');
+      sel.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    const input = container.querySelector('input[aria-label="Categoria dos cursos novos (nova)"]');
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, 'Arte');
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    await act(async () => { confirmBtn().click(); });
+    await flush();
+    expect(api.importCourses).toHaveBeenCalledWith(items, 'Arte');
+  });
+
+  it('sem cursos novos não mostra o seletor de categoria', async () => {
+    await mountAndReceive({ new: [], existing: [{}], invalid: [], imagesToFill: 2 });
+    expect(container.querySelector('#imp-category')).toBeNull();
   });
 
   it('com cursos novos mostra o botão de importar', async () => {

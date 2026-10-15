@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { makeApp } from './helpers.js';
 import { migrate } from '../src/core/migrate.js';
+import { ALL_MIGRATIONS } from './migration-list.js';
 
 let ctx;
 beforeEach(async () => { ctx = await makeApp(); });
@@ -77,7 +78,7 @@ describe('migração 002 (coluna de imagem)', () => {
       db.exec('PRAGMA foreign_keys = ON;');
       expect(migrate(db, dir)).toEqual(['001_init.sql']);
       db.prepare("INSERT INTO lc_courses (title, platform, category, description, status, manual_progress, created_at, updated_at) VALUES ('Antigo','Udemy','Geral','', 'active', 30, 'a', 'a')").run();
-      expect(migrate(db)).toEqual(['002_course_image.sql']);
+      expect(migrate(db)).toEqual(ALL_MIGRATIONS.slice(1)); // todas as seguintes à 001
       const row = db.prepare('SELECT title, manual_progress, image_url FROM lc_courses').get();
       expect(row).toMatchObject({ title: 'Antigo', manual_progress: 30, image_url: null });
       expect(migrate(db)).toEqual([]); // idempotente
