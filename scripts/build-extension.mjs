@@ -12,10 +12,16 @@ export function buildFiles(appOrigin = 'http://localhost:3000') {
   const origin = new URL(appOrigin).origin;
   const lib = (name) => readFileSync(resolve(root, 'apps/web/src/lib', name), 'utf8').replace(/^export /m, '');
   const lit = JSON.stringify(origin);
+  // inclui o arquivo inteiro da biblioteca (todas as funções), sem o `export` de cada uma
+  const wholeLib = (name) => readFileSync(resolve(root, 'apps/web/src/lib', name), 'utf8').replace(/^export /gm, '');
+  const platformScript = (id) => `const LC_PLATFORM_ID = ${JSON.stringify(id)};
+` + src('content-platform.js').replace('/*__PLATFORM_LIB__*/', () => wholeLib('platform-courses.js'));
   return {
     'manifest.json': src('manifest.json').replaceAll('__APP_ORIGIN__', origin),
     'background.js': src('background.js').replaceAll('__APP_ORIGIN__', lit),
     'content-app.js': src('content-app.js'),
+    'content-alura.js': platformScript('alura'),
+    'content-bradesco.js': platformScript('bradesco'),
     'content-udemy.js': src('content-udemy.js')
       .replace('/*__EXTRACTOR__*/', () => lib('udemy-extractor.js'))
       .replace('/*__CURRICULUM__*/', () => lib('udemy-curriculum.js')),

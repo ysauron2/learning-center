@@ -13,6 +13,7 @@ Datas são texto ISO 8601 em UTC.
 **lc_courses** — `id`, `title`, `platform`, `category`, `description`, `url`,
 `image_url` (capa, https; nulo = degradê padrão; migração `002`),
 `udemy_slug` (endereço do curso no player da Udemy, aprendido na importação; único; migração `003`),
+`source_key` (chave `alura:<slug>` / `bradesco:<slug>` do curso importado por link ou por "Meus cursos"; única; migração `010`),
 `status` (`planned|active|paused|completed`), `manual_progress` (0–100),
 `created_at`, `updated_at`.
 

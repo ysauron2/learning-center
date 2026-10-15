@@ -25,6 +25,10 @@ Janela da Udemy ─(preload-udemy)┘   (ponte: bridge.js)    └── dados em
 - **Quem pode falar com quem** (`apps/desktop/src/bridge.js`): a Udemy só entrega o que leu e pede sincronização; o app só busca o que ficou pendente e pede para abrir a Udemy. O processo principal confere a janela de origem, o quadro principal (iframes são recusados) e o endereço de quem enviou. A Udemy nunca recebe nada do app. A comunicação com a API acontece só no processo principal.
 - Links para fora da Udemy abrem no navegador do sistema. O identificador de navegador da janela da Udemy não contém "Electron" nem o nome do app (muitos sites recusam esses); continua sendo o Chromium embutido.
 
+## Alura e Fundação Bradesco
+
+Além da Udemy, o menu **Plataformas** abre a **Alura** e a **Fundação Bradesco** (Escola Virtual), cada uma numa janela própria com sessão própria (`persist:alura`, `persist:bradesco`) e o seu preload (`preload-alura.cjs`, `preload-bradesco.cjs`). Elas só entregam a lista dos cursos lida e o progresso; a plataforma de quem envia vem do endereço da janela. O login pelo Google, Apple, Facebook e LinkedIn abre numa janelinha dentro do app, como na Udemy. **A leitura logada ainda não foi verificada com conta real.** Detalhes e diagnóstico: [`IMPORTACAO-ALURA-BRADESCO.md`](IMPORTACAO-ALURA-BRADESCO.md).
+
 ## Dados
 
 | Sistema | Pasta |

@@ -6,13 +6,14 @@ import {
 import { importBody } from './import.js';
 import { contentBody } from './import-content.js';
 import { youtubeBody, textBody } from './import-other.js';
+import { linkBody } from './import-link.js';
 
 function intParam(req) {
   const id = Number.parseInt(req.params.id, 10);
   return Number.isInteger(id) && id > 0 ? id : -1;
 }
 
-export function coursesRoutes(app, { courses, courseImporter, contentImporter, otherImporters }) {
+export function coursesRoutes(app, { courses, courseImporter, contentImporter, otherImporters, linkImporter }) {
   app.get('/courses', async (req) => ({ data: courses.list(parse(courseQuery, req.query)) }));
   app.get('/courses/summary', async () => ({ data: courses.summary() }));
   app.post('/courses', async (req, reply) => {
@@ -21,6 +22,8 @@ export function coursesRoutes(app, { courses, courseImporter, contentImporter, o
   });
   app.post('/courses/import/preview', async (req) => ({ data: courseImporter.preview(parse(importBody, req.body)) }));
   app.post('/courses/import', async (req) => ({ data: courseImporter.run(parse(importBody, req.body)) }));
+  app.post('/courses/import-link/preview', async (req) => ({ data: await linkImporter.preview(parse(linkBody, req.body)) }));
+  app.post('/courses/import-link', async (req) => ({ data: await linkImporter.run(parse(linkBody, req.body)) }));
   app.post('/courses/import-youtube/preview', async (req) => ({ data: await otherImporters.youtubePreview(parse(youtubeBody, req.body)) }));
   app.post('/courses/import-youtube', async (req) => ({ data: await otherImporters.youtubeRun(parse(youtubeBody, req.body)) }));
   app.post('/courses/import-text/preview', async (req) => ({ data: otherImporters.textPreview(parse(textBody, req.body)) }));

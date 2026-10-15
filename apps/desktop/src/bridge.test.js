@@ -157,3 +157,92 @@ describe('bridge · abrir a Udemy', () => {
     expect(openUdemy).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('plataformas: Alura e Fundação Bradesco', () => {
+  it('platformOfUrl e senderKind reconhecem só https nos domínios exatos (ou subdomínios)', async () => {
+    const { platformOfUrl, PLATFORMS } = await import('./platforms.js');
+    expect(platformOfUrl('https://cursos.alura.com.br/dashboard')).toBe('alura');
+    expect(platformOfUrl('https://www.alura.com.br/curso-online-x')).toBe('alura');
+    expect(platformOfUrl('https://www.ev.org.br/cursos/x')).toBe('bradesco');
+    expect(platformOfUrl('https://ev.org.br/')).toBe('bradesco');
+    for (const bad of ['http://www.alura.com.br/', 'https://alura.com.br.evil.com/', 'https://evil.com/alura.com.br', 'https://notalura.com.br/', 'https://ev.org.br.evil.com/', 'https://xev.org.br/', 'javascript:alert(1)', '', undefined]) {
+      expect(platformOfUrl(bad), String(bad)).toBeNull();
+    }
+    expect(senderKind('https://cursos.alura.com.br/dashboard', API)).toBe('alura');
+    expect(senderKind('https://www.ev.org.br/', API)).toBe('bradesco');
+    expect(senderKind('https://alura.com.br.evil.com/', API)).toBeNull();
+    // as páginas de "Meus cursos" ficam dentro dos domínios da própria plataforma
+    for (const p of Object.values(PLATFORMS)) expect(platformOfUrl(p.home), p.id).toBe(p.id);
+  });
+
+  it('o login pelo LinkedIn (usado pela Escola Virtual) abre dentro do app, e só no host exato', () => {
+    expect(isAuthHost('https://www.linkedin.com/oauth/v2/authorization?x=1')).toBe(true);
+    expect(isAuthHost('https://www.linkedin.com.evil.com/')).toBe(false);
+    expect(isAuthHost('https://evil.com/www.linkedin.com')).toBe(false);
+  });
+
+  it('a Alura entrega a lista como Alura (a plataforma vem da janela, nunca da mensagem)', async () => {
+    const { bridge, fetchMock, openAppPage } = setup();
+    const items = [{ title: 'A', url: 'https://cursos.alura.com.br/course/a', progress: 10 }];
+    const r = await bridge.handle({ type: 'lc-sync', kind: 'courses', items, platform: 'udemy' }, 'alura');
+    expect(r.ok).toBe(true);
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ platform: 'alura', updateProgress: true, items });
+    await bridge.handle({ type: 'lc-items', items, platform: 'bradesco' }, 'alura');
+    expect(openAppPage).toHaveBeenCalledWith('/importar/alura');
+    expect(await bridge.handle({ type: 'lc-get' }, 'app')).toEqual({ items, content: null, platform: 'alura' });
+    expect(await bridge.handle({ type: 'lc-get' }, 'app')).toEqual({ items: null, content: null });
+  });
+
+  it('a Fundação Bradesco abre /importar/bradesco', async () => {
+    const { bridge, openAppPage } = setup();
+    await bridge.handle({ type: 'lc-items', items: [{ title: 'A' }] }, 'bradesco');
+    expect(openAppPage).toHaveBeenCalledWith('/importar/bradesco');
+  });
+
+  it('Alura e Bradesco não podem sincronizar conteúdo de aulas nem enviar conteúdo (só a Udemy)', async () => {
+    const { bridge, fetchMock, openAppPage } = setup();
+    const content = { title: 'C', url: 'u', modules: [{ title: 'M', lessons: [] }] };
+    for (const kind of ['alura', 'bradesco']) {
+      expect(await bridge.handle({ type: 'lc-sync', kind: 'content', content }, kind)).toEqual({ ok: false, reason: 'bad-request' });
+      expect(await bridge.handle({ type: 'lc-content', content }, kind)).toEqual({ ok: false, reason: 'forbidden' });
+    }
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(openAppPage).not.toHaveBeenCalled();
+  });
+
+  it('as janelas das plataformas nunca recebem nada do app nem mandam abrir janelas', async () => {
+    const { bridge, fetchMock } = setup();
+    for (const kind of ['alura', 'bradesco', 'udemy']) {
+      expect(await bridge.handle({ type: 'lc-get' }, kind)).toEqual({ ok: false, reason: 'forbidden' });
+      expect(await bridge.handle({ type: 'open-platform', platform: 'alura' }, kind)).toEqual({ ok: false, reason: 'forbidden' });
+      expect(await bridge.handle({ type: 'open-udemy' }, kind)).toEqual({ ok: false, reason: 'forbidden' });
+    }
+    for (const t of ['lc-sync', 'lc-items', 'storage-get', 'storage-set', 'open-platform']) {
+      expect(await bridge.handle({ type: t }, null)).toEqual({ ok: false, reason: 'forbidden' });
+      expect(await bridge.handle({ type: t }, 'outra')).toEqual({ ok: false, reason: 'forbidden' });
+    }
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('o app pode pedir para abrir só plataformas conhecidas; as janelas usam o mesmo interruptor de sincronização', async () => {
+    const openPlatform = vi.fn();
+    const saved = [];
+    const bridge = createBridge({ apiBase: API, fetchImpl: vi.fn(), settings: { autoSync: false }, saveSettings: (s) => saved.push(s), openAppPage: () => {}, openPlatform });
+    expect(await bridge.handle({ type: 'open-platform', platform: 'alura' }, 'app')).toEqual({ ok: true });
+    expect(await bridge.handle({ type: 'open-platform', platform: 'bradesco' }, 'app')).toEqual({ ok: true });
+    expect(openPlatform.mock.calls).toEqual([['alura'], ['bradesco']]);
+    for (const bad of ['evil', '', undefined, 5, '../x', '__proto__']) {
+      expect(await bridge.handle({ type: 'open-platform', platform: bad }, 'app')).toEqual({ ok: false, reason: 'bad-request' });
+    }
+    expect(openPlatform).toHaveBeenCalledTimes(2);
+    expect(await bridge.handle({ type: 'storage-get', key: 'autoSync' }, 'alura')).toEqual({ autoSync: false });
+  });
+
+  it('o registro do desktop concorda com o da API (mesmos domínios)', async () => {
+    const { PLATFORMS: desk } = await import('./platforms.js');
+    const { PLATFORMS: api } = await import('../../api/src/core/platforms.js');
+    for (const id of Object.keys(api)) expect(desk[id].domains, id).toEqual(api[id].domains);
+    expect(desk.alura.home).toBe(api.alura.myCoursesUrl);
+    expect(desk.bradesco.home).toBe(api.bradesco.myCoursesUrl);
+  });
+});

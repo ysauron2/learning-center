@@ -1,5 +1,5 @@
 // Gera apps/desktop/dist: servidor da API num único arquivo, migrações e os scripts de pré-carga
-// (preload) que injetam, na janela da Udemy e na do app, a mesma leitura que a extensão faz.
+// (preload) que injetam, nas janelas da Udemy, da Alura, da Fundação Bradesco e na do app, a mesma leitura que a extensão faz.
 // Uso: node scripts/build-desktop.mjs
 import { writeFileSync, mkdirSync, cpSync, rmSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -15,7 +15,8 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
  */
 export function preloadFiles() {
   const f = buildFiles('http://127.0.0.1');
-  const udemy = `'use strict';
+  // um preload por plataforma: o mesmo adaptador de IPC em volta do script de conteúdo de cada uma
+  const wrap = (code) => `'use strict';
 const { ipcRenderer } = require('electron');
 const send = (msg) => ipcRenderer.invoke('lc-msg', msg);
 globalThis.chrome = {
@@ -23,7 +24,7 @@ globalThis.chrome = {
   storage: { local: { get: (key) => send({ type: 'storage-get', key }), set: (values) => send({ type: 'storage-set', values }) } },
 };
 const run = () => {
-${f['content-udemy.js']}
+${code}
 };
 if (document.readyState === 'loading') window.addEventListener('DOMContentLoaded', run);
 else run();
@@ -34,10 +35,16 @@ globalThis.chrome = { runtime: { sendMessage: (msg) => ipcRenderer.invoke('lc-ms
 contextBridge.exposeInMainWorld('lcDesktop', {
   isDesktop: true,
   openUdemy: () => ipcRenderer.invoke('lc-msg', { type: 'open-udemy' }),
+  openPlatform: (id) => ipcRenderer.invoke('lc-msg', { type: 'open-platform', platform: String(id) }),
 });
 ${f['content-app.js']}
 `;
-  return { 'preload-udemy.cjs': udemy, 'preload-app.cjs': app };
+  return {
+    'preload-udemy.cjs': wrap(f['content-udemy.js']),
+    'preload-alura.cjs': wrap(f['content-alura.js']),
+    'preload-bradesco.cjs': wrap(f['content-bradesco.js']),
+    'preload-app.cjs': app,
+  };
 }
 
 async function main() {

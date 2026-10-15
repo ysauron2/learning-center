@@ -43,6 +43,7 @@ export default function Courses() {
         <div className="row" style={{ gap: 8 }}>
           <button className="btn" onClick={() => setManaging(true)}>Categorias e plataformas</button>
           <Link className="btn" to="/importar">Importar da Udemy</Link>
+          <Link className="btn" to="/importar/link">Importar por link</Link>
           <Link className="btn" to="/importar-outras">Importar de outra plataforma</Link>
           <button className="btn btn-primary" onClick={() => setAdding(true)}><Icon name="plus" size={16} strokeWidth={2.4} />Adicionar curso</button>
         </div>

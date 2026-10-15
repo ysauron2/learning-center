@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Learning Center · Importar da Udemy",
-  "version": "0.1.0",
-  "description": "Lê a página Meus cursos da Udemy (você já logado) e leva a lista para o seu Learning Center local.",
+  "name": "Lume · Importar da Udemy, Alura e Fundação Bradesco",
+  "version": "0.2.0",
+  "description": "Lê a lista dos seus cursos (você já logado) na Udemy, na Alura ou na Escola Virtual da Fundação Bradesco e leva para o seu Lume local.",
   "permissions": [
     "storage"
   ],
@@ -27,6 +27,24 @@
         "content-app.js"
       ],
       "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://*.alura.com.br/*"
+      ],
+      "js": [
+        "content-alura.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://*.ev.org.br/*"
+      ],
+      "js": [
+        "content-bradesco.js"
+      ],
+      "run_at": "document_idle"
     }
   ],
   "host_permissions": [

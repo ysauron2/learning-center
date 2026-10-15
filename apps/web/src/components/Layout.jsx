@@ -2,6 +2,7 @@ import { NavLink, Outlet } from 'react-router-dom';
 import { Icon } from './Icon.jsx';
 import { useTheme } from '../lib/hooks.js';
 import { isDesktop, openUdemy } from './DesktopUdemy.jsx';
+import { openPlatform } from './DesktopPlatform.jsx';
 
 const ACTIVE = [
   { to: '/', label: 'Início', icon: 'book', end: true },
@@ -34,7 +35,11 @@ export function Layout() {
           </NavLink>
         ))}
         {isDesktop() && (
-          <button className="nav-link" onClick={openUdemy}><Icon name="play" />Abrir a Udemy</button>
+          <>
+            <button className="nav-link" onClick={openUdemy}><Icon name="play" />Abrir a Udemy</button>
+            <button className="nav-link" onClick={() => openPlatform('alura')}><Icon name="play" />Abrir a Alura</button>
+            <button className="nav-link" onClick={() => openPlatform('bradesco')}><Icon name="play" />Abrir a Fundação Bradesco</button>
+          </>
         )}
         {SOON.map((i) => (
           <span key={i.label} className="nav-link" aria-disabled="true">

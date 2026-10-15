@@ -18,6 +18,7 @@ export async function buildApp({
   googleFetch,
   notionFetch,
   youtubeFetch,
+  linkFetch,
   notionPauseMs,
   notionSleep,
   autoSync = false,
@@ -27,7 +28,7 @@ export async function buildApp({
   app.decorate('db', db);
   app.addHook('onClose', async () => db.close());
 
-  await app.register(registerLearningCenter, { db, clock, migrationsDir, googleFetch, notionFetch, youtubeFetch, notionPauseMs, notionSleep, autoSync, prefix: '/api/v1' });
+  await app.register(registerLearningCenter, { db, clock, migrationsDir, googleFetch, notionFetch, youtubeFetch, linkFetch, notionPauseMs, notionSleep, autoSync, prefix: '/api/v1' });
 
   if (webDist && existsSync(resolve(webDist, 'index.html'))) {
     await app.register(fastifyStatic, { root: resolve(webDist) });

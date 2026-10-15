@@ -29,6 +29,7 @@ como “em breve” na navegação e entram nas próximas fases (veja `docs/ARQU
   logado) e cadastra os cursos novos, com prévia antes de salvar; também importa módulos e aulas de cada curso (um clique por curso). Veja
   [`docs/IMPORTACAO-UDEMY.md`](docs/IMPORTACAO-UDEMY.md).
 
+- **Importar da Alura e da Fundação Bradesco**: cole o link de um curso (sem login) e o Lume traz título, descrição, carga horária, capa e a lista de aulas; também lê a lista dos seus cursos e o progresso pela janela logada do app ou pela extensão (leitura logada ainda não verificada com conta real). Veja [`docs/IMPORTACAO-ALURA-BRADESCO.md`](docs/IMPORTACAO-ALURA-BRADESCO.md).
 - **Importar de outra plataforma**: cole o link de uma playlist pública do YouTube ou uma lista de aulas e o Lume monta o curso (módulos, aulas e tempos). Veja [`docs/IMPORTACAO-OUTRAS.md`](docs/IMPORTACAO-OUTRAS.md).
 
 Nada depende de API externa (a API de Afiliado da Udemy foi descartada): o acompanhamento é

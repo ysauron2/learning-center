@@ -2,18 +2,18 @@ import { app, BrowserWindow, ipcMain, Menu, shell } from 'electron';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join } from 'node:path';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-import { createBridge, senderKind, isUdemyHost, isAuthHost } from './bridge.js';
+import { createBridge, senderKind, isAuthHost } from './bridge.js';
+import { PLATFORMS, PLATFORM_IDS, platformOfUrl } from './platforms.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const dist = join(here, '..', 'dist');
 const PREFERRED_PORT = Number(process.env.LC_PORT ?? 38250);
-const UDEMY_HOME = 'https://www.udemy.com/home/my-courses/learning/';
 const SMOKE = process.env.LC_SMOKE === '1';
 
 let server;
 let base;
 let mainWin;
-let udemyWin;
+const platformWins = {}; // uma janela por plataforma (Udemy, Alura, Fundação Bradesco)
 let bridge;
 
 const isHttp = (url) => /^https?:\/\//i.test(url);
@@ -73,49 +73,59 @@ function openAppPage(path) {
   mainWin.loadURL(`${base}${path}`);
 }
 
-function openUdemy() {
-  if (udemyWin && !udemyWin.isDestroyed()) {
-    udemyWin.show();
-    udemyWin.focus();
+function openPlatform(id) {
+  const platform = PLATFORMS[id];
+  if (!platform) return;
+  const existing = platformWins[id];
+  if (existing && !existing.isDestroyed()) {
+    existing.show();
+    existing.focus();
     return;
   }
-  udemyWin = new BrowserWindow({
+  const win = new BrowserWindow({
     width: 1200,
     height: 860,
-    title: 'Udemy · Lume',
+    title: `${platform.name} · Lume`,
     show: !SMOKE,
     webPreferences: {
-      partition: 'persist:udemy', // mantém o login entre aberturas
-      preload: join(dist, 'preload-udemy.cjs'),
+      partition: `persist:${id}`, // mantém o login entre aberturas (uma sessão separada por plataforma)
+      preload: join(dist, `preload-${id}.cjs`),
       contextIsolation: true,
       sandbox: true,
       nodeIntegration: false,
     },
   });
-  udemyWin.webContents.setUserAgent(browserUserAgent());
-  // Links para fora da Udemy abrem no navegador do sistema; os da Udemy ficam nesta janela.
-  // Exceção: a janelinha de login (Google/Apple/Facebook) abre aqui dentro, com a mesma sessão, para o login voltar para a Udemy.
-  udemyWin.webContents.setWindowOpenHandler(({ url }) => {
+  platformWins[id] = win;
+  win.webContents.setUserAgent(browserUserAgent());
+  // Links para fora da plataforma abrem no navegador do sistema; os dela ficam nesta janela.
+  // Exceção: a janelinha de login (Google/Apple/Facebook/LinkedIn) abre aqui dentro, com a mesma sessão, para o login voltar para a plataforma.
+  win.webContents.setWindowOpenHandler(({ url }) => {
     if (isAuthHost(url)) {
-      return { action: 'allow', overrideBrowserWindowOptions: { parent: udemyWin, width: 520, height: 720, title: 'Entrar · Lume', autoHideMenuBar: true } };
+      return { action: 'allow', overrideBrowserWindowOptions: { parent: win, width: 520, height: 720, title: 'Entrar · Lume', autoHideMenuBar: true } };
     }
-    if (isUdemyHost(url)) udemyWin.loadURL(url);
+    if (platformOfUrl(url) === id) win.loadURL(url);
     else if (isHttp(url)) shell.openExternal(url);
     return { action: 'deny' };
   });
-  udemyWin.webContents.on('did-create-window', (child) => {
+  win.webContents.on('did-create-window', (child) => {
     child.webContents.setUserAgent(browserUserAgent());
   });
-  udemyWin.loadURL(SMOKE ? 'about:blank' : UDEMY_HOME);
-  udemyWin.on('closed', () => { udemyWin = null; });
+  win.loadURL(SMOKE ? 'about:blank' : platform.home);
+  win.on('closed', () => { delete platformWins[id]; });
 }
+
+const openUdemy = () => openPlatform('udemy');
 
 function buildMenu() {
   const template = [
     { label: 'Lume', submenu: [{ role: 'about' }, { type: 'separator' }, { role: 'quit', label: 'Sair' }] },
     {
-      label: 'Udemy',
-      submenu: [{ label: 'Abrir a Udemy (Meu aprendizado)', accelerator: 'CmdOrCtrl+U', click: openUdemy }],
+      label: 'Plataformas',
+      submenu: [
+        { label: 'Abrir a Udemy (Meu aprendizado)', accelerator: 'CmdOrCtrl+U', click: () => openPlatform('udemy') },
+        { label: 'Abrir a Alura', accelerator: 'CmdOrCtrl+Shift+A', click: () => openPlatform('alura') },
+        { label: 'Abrir a Fundação Bradesco', accelerator: 'CmdOrCtrl+Shift+B', click: () => openPlatform('bradesco') },
+      ],
     },
     { label: 'Editar', submenu: [{ role: 'undo' }, { role: 'redo' }, { type: 'separator' }, { role: 'cut' }, { role: 'copy' }, { role: 'paste' }, { role: 'selectAll' }] },
     { label: 'Exibir', submenu: [{ role: 'reload' }, { role: 'togglefullscreen' }, { type: 'separator' }, { role: 'zoomIn' }, { role: 'zoomOut' }, { role: 'resetZoom' }] },
@@ -130,8 +140,8 @@ async function smokeTest() {
   const result = await win.webContents.executeJavaScript(
     `(async () => ({ title: document.title, desktop: Boolean(window.lcDesktop && window.lcDesktop.isDesktop), health: await fetch('/api/v1/health').then((r) => r.json()), courses: (await fetch('/api/v1/courses').then((r) => r.json())).data.length, path: location.pathname }))()`,
   );
-  const udemyOk = Boolean(udemyWin && !udemyWin.isDestroyed());
-  const out = { ...result, base, udemyWindow: udemyOk, userAgent: browserUserAgent(), userData: app.getPath('userData'), electron: process.versions.electron, node: process.versions.node };
+  const windows = Object.fromEntries(PLATFORM_IDS.map((id) => [id, Boolean(platformWins[id] && !platformWins[id].isDestroyed())]));
+  const out = { ...result, base, udemyWindow: windows.udemy, platformWindows: windows, userAgent: browserUserAgent(), userData: app.getPath('userData'), electron: process.versions.electron, node: process.versions.node };
   if (process.env.LC_SMOKE_OUT) writeFileSync(process.env.LC_SMOKE_OUT, JSON.stringify(out, null, 2));
   app.quit();
 }
@@ -160,6 +170,7 @@ if (!app.requestSingleInstanceLock()) {
       saveSettings: (s) => { try { writeFileSync(settingsFile, JSON.stringify(s)); } catch { /* ignora */ } },
       openAppPage,
       openUdemy,
+      openPlatform,
     });
 
     // Só aceita mensagens do quadro principal de cada janela e confere o endereço de quem enviou.
@@ -168,14 +179,16 @@ if (!app.requestSingleInstanceLock()) {
       const url = event.senderFrame?.url ?? '';
       if (event.senderFrame !== wc.mainFrame) return { ok: false, reason: 'forbidden' };
       let kind = null;
-      if (udemyWin && !udemyWin.isDestroyed() && wc === udemyWin.webContents) kind = senderKind(url, base) === 'udemy' ? 'udemy' : null;
+      // cada janela só vale como a plataforma dela: se ela navegar para outro site, deixa de ser aceita
+      const platformId = PLATFORM_IDS.find((id) => platformWins[id] && !platformWins[id].isDestroyed() && wc === platformWins[id].webContents);
+      if (platformId) kind = senderKind(url, base) === platformId ? platformId : null;
       else if (mainWin && wc === mainWin.webContents) kind = senderKind(url, base) === 'app' ? 'app' : null;
       return bridge.handle(msg, kind);
     });
 
     buildMenu();
     createMainWindow();
-    if (SMOKE) { openUdemy(); await smokeTest(); }
+    if (SMOKE) { PLATFORM_IDS.forEach(openPlatform); await smokeTest(); }
   });
 
   app.on('window-all-closed', () => app.quit());

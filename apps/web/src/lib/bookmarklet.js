@@ -57,3 +57,10 @@ export function parseExtensionMessage(event, selfOrigin, selfWindow) {
   if (!d || d.type !== 'lc-import-ext') return null;
   return parseImportMessage({ origin: 'https://www.udemy.com', data: { type: 'lc-import', items: d.items } });
 }
+
+/** Plataforma indicada na mensagem da extensão ('udemy' quando não diz). Só vale se for uma das conhecidas. */
+export function extensionPlatform(event) {
+  const p = event && event.data && event.data.platform;
+  if (p === undefined || p === null) return 'udemy';
+  return p === 'udemy' || p === 'alura' || p === 'bradesco' ? p : null;
+}
