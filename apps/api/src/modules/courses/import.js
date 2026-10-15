@@ -41,7 +41,8 @@ const canonicalUrl = (key) =>
     : `https://www.udemy.com/course/${key}/`;
 
 /** Plataformas da leitura de "Meus cursos". A Udemy é a original; as outras vêm do registro (core/platforms.js). */
-export const IMPORT_PLATFORMS = ['udemy', ...Object.keys(PLATFORMS)];
+// as plataformas só de link (Microsoft Learn etc.) não têm leitura pela janela logada
+export const IMPORT_PLATFORMS = ['udemy', ...Object.values(PLATFORMS).filter((p) => !p.linkOnly).map((p) => p.id)];
 const platformName = (id) => (id === 'udemy' ? 'Udemy' : PLATFORMS[id].name);
 
 /** Chave do curso (sem duplicar ao importar de novo): a da Udemy ou `plataforma:slug`. */

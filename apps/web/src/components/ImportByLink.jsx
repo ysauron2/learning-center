@@ -5,13 +5,14 @@ import { useAsync } from '../lib/hooks.js';
 import { formatMinutes } from '../lib/format.js';
 import { DEFAULT_CATEGORIES } from '../lib/choices.js';
 import { IMPORT_PLATFORMS } from '../lib/platforms.js';
+import { detectPlatform, joinNames } from '../lib/link-platforms.js';
 import { ChoiceOrNew } from './ChoiceOrNew.jsx';
 import { ErrorState } from './ui.jsx';
 
 const MAX_MODULES_SHOWN = 12;
 
 /**
- * Importar por link: a pessoa cola o endereço público de um curso (Alura ou Fundação Bradesco),
+ * Importar por link: a pessoa cola o endereço público de um curso (de qualquer plataforma aceita pela API),
  * vê a prévia e confirma. Sem login. Tudo que vem do site aparece como texto.
  */
 export function ImportByLink({ platform }) {
@@ -23,6 +24,9 @@ export function ImportByLink({ platform }) {
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(null); // 'preview' | 'import' | null
   const opts = useAsync(() => api.options(), []);
+  // plataformas aceitas: vêm da API (registro único); se não carregar, a tela funciona do mesmo jeito, só sem o reconhecimento
+  const accepted = useAsync(() => api.linkPlatforms(), []).data ?? [];
+  const detected = detectPlatform(url, accepted);
   const headRef = useRef(null);
   useEffect(() => { if (preview) headRef.current?.focus(); }, [preview]);
 
@@ -56,7 +60,7 @@ export function ImportByLink({ platform }) {
   }
 
   const shown = preview ? preview.modules.slice(0, MAX_MODULES_SHOWN) : [];
-  const platformName = preview ? IMPORT_PLATFORMS[preview.platform]?.name ?? '' : '';
+  const platformName = preview ? preview.platformName ?? IMPORT_PLATFORMS[preview.platform]?.name ?? '' : '';
 
   return (
     <section className="card" aria-label="Importar por link">
@@ -72,10 +76,26 @@ export function ImportByLink({ platform }) {
         <div className="field" style={{ flex: '1 1 320px' }}>
           <label htmlFor="link-url">Link do curso</label>
           <input id="link-url" className="input" type="url" inputMode="url" value={url} onChange={(e) => { setUrl(e.target.value); setError(null); }}
-            placeholder={hint?.linkExample ?? 'https://www.alura.com.br/curso-online-… ou https://www.ev.org.br/cursos/…'} autoComplete="off" />
+            placeholder={hint?.linkExample ?? 'Cole aqui o endereço do curso'} autoComplete="off" />
         </div>
         <button className="btn btn-primary" type="submit" disabled={!url.trim() || Boolean(busy)}>{busy === 'preview' ? 'Lendo a página…' : 'Ver prévia'}</button>
       </form>
+
+      {url.trim() && accepted.length > 0 && (
+        <p className="muted" role="status" aria-live="polite" style={{ margin: '8px 0 0' }}>
+          {detected ? <>Site reconhecido: <strong>{detected.name}</strong>.</> : `Não reconheci esse site. Aceitamos links de: ${joinNames(accepted.map((p) => p.name))}.`}
+        </p>
+      )}
+      {!platform && accepted.length > 0 && (
+        <details style={{ marginTop: 12 }}>
+          <summary>Sites aceitos e o que entra de cada um</summary>
+          <ul>
+            {accepted.map((p) => (
+              <li key={p.id}><strong>{p.name}</strong>{p.example ? <> — <span className="muted">{p.example}</span></> : null}{p.note ? <><br />{p.note}</> : null}</li>
+            ))}
+          </ul>
+        </details>
+      )}
 
       {error && <div style={{ marginTop: 12 }}><ErrorState error={error} /></div>}
 

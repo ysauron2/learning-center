@@ -10,6 +10,12 @@ vi.mock('../lib/api.js', () => ({
     importCourses: vi.fn(),
     linkPreview: vi.fn(),
     importLink: vi.fn(),
+    linkPlatforms: vi.fn().mockResolvedValue([
+      { id: 'alura', name: 'Alura', hosts: ['alura.com.br'], example: 'https://www.alura.com.br/curso-online-…', note: 'Entram o título e os capítulos.' },
+      { id: 'bradesco', name: 'Fundação Bradesco', hosts: ['ev.org.br'], example: null, note: null },
+      { id: 'microsoft', name: 'Microsoft Learn', hosts: ['learn.microsoft.com'], example: 'https://learn.microsoft.com/pt-br/training/paths/…', note: 'Aceita trilhas, módulos e certificações.' },
+      { id: 'freecodecamp', name: 'freeCodeCamp', hosts: ['freecodecamp.org'], example: null, note: null },
+    ]),
     options: vi.fn().mockResolvedValue({ categories: ['Geral', 'Design'].map((name) => ({ name, count: 0, protected: false })), platforms: [] }),
   },
 }));
@@ -176,12 +182,12 @@ describe('importar por link', () => {
   });
 
   it('erro (link inválido, página que não abre) aparece com a mensagem em português e não grava', async () => {
-    api.linkPreview.mockRejectedValue(Object.assign(new Error('Esse link não parece ser de um curso da Alura ou da Fundação Bradesco.'), { status: 400 }));
+    api.linkPreview.mockRejectedValue(Object.assign(new Error('Esse link não parece ser de um curso de uma plataforma aceita.'), { status: 400 }));
     await mount(<ImportLink />);
     await setValue(container.querySelector('#link-url'), 'https://evil.com/x');
     await act(async () => { byText('Ver prévia').click(); });
     await flush();
-    expect(container.querySelector('[role="alert"]').textContent).toContain('Esse link não parece ser de um curso da Alura ou da Fundação Bradesco.');
+    expect(container.querySelector('[role="alert"]').textContent).toContain('Esse link não parece ser de um curso de uma plataforma aceita.');
     expect(api.importLink).not.toHaveBeenCalled();
     expect(byText('Ver prévia').disabled).toBe(false);
   });
@@ -198,5 +204,71 @@ describe('importar por link', () => {
     await act(async () => { finish(preview); });
     await flush();
     expect(document.activeElement.textContent).toBe('JavaScript I: algoritmos');
+  });
+});
+
+describe('importar por link · plataformas aceitas (vêm da API)', () => {
+  const msPreview = {
+    platform: 'microsoft', platformName: 'Microsoft Learn', title: 'Introdução à IA no Azure', url: 'https://learn.microsoft.com/pt-br/training/modules/x/', description: 'Resumo.',
+    workloadMin: 56, imageUrl: null, moduleCount: 1, lessonCount: 2,
+    modules: [{ title: 'Módulo <i>1</i>', lessons: [{ title: 'Introdução', durationMin: 3 }, { title: 'Exercício', durationMin: 30 }] }],
+    warnings: [], existing: null,
+  };
+
+  it('lista os sites aceitos a partir do que a API devolveu e a frase da página não cita plataformas fixas', async () => {
+    await mount(<ImportLink />);
+    expect(api.linkPlatforms).toHaveBeenCalled();
+    const items = [...container.querySelectorAll('details li')].map((li) => li.querySelector('strong').textContent);
+    expect(items).toEqual(['Alura', 'Fundação Bradesco', 'Microsoft Learn', 'freeCodeCamp']);
+    expect(text()).toContain('Aceita trilhas, módulos e certificações.');
+    expect(container.querySelector('.page-sub').textContent).not.toMatch(/Alura|Bradesco/);
+  });
+
+  it('reconhece o site pelo endereço, com ou sem https, subdomínio e espaços, e avisa quando não conhece', async () => {
+    await mount(<ImportLink />);
+    const input = container.querySelector('#link-url');
+    expect(container.querySelector('[role="status"]')).toBeNull();
+    await setValue(input, ' learn.microsoft.com/pt-br/training/paths/x/ ');
+    expect(container.querySelector('[role="status"]').textContent).toBe('Site reconhecido: Microsoft Learn.');
+    await setValue(input, 'https://www.freecodecamp.org/learn/javascript-v9');
+    expect(container.querySelector('[role="status"]').textContent).toBe('Site reconhecido: freeCodeCamp.');
+    await setValue(input, 'https://learn.microsoft.com.evil.com/x');
+    expect(container.querySelector('[role="status"]').textContent).toBe('Não reconheci esse site. Aceitamos links de: Alura, Fundação Bradesco, Microsoft Learn e freeCodeCamp.');
+    await setValue(input, 'isso não é um endereço');
+    expect(container.querySelector('[role="status"]').textContent).toContain('Não reconheci esse site');
+  });
+
+  it('prévia de uma plataforma nova mostra o nome dela e o texto do site continua sendo só texto', async () => {
+    api.linkPreview.mockResolvedValue(msPreview);
+    api.importLink.mockResolvedValue({ created: true, courseId: 4, title: msPreview.title, lessonsAdded: 2, warnings: [] });
+    await mount(<ImportLink />);
+    await setValue(container.querySelector('#link-url'), 'https://learn.microsoft.com/pt-br/training/modules/x/');
+    await act(async () => { byText('Ver prévia').click(); });
+    await flush();
+    expect(text()).toContain('Microsoft Learn · 56min de carga horária · 1 módulo(s) · 2 aula(s)');
+    expect(text()).toContain('Módulo <i>1</i>');
+    expect(container.querySelector('summary i')).toBeNull();
+    await act(async () => { byText('Importar curso').click(); });
+    await flush();
+    expect(api.importLink).toHaveBeenCalledWith('https://learn.microsoft.com/pt-br/training/modules/x/', 'Geral');
+    expect(text()).toContain('Curso criado');
+  });
+
+  it('se a lista de sites não carregar, a tela continua funcionando sem o reconhecimento', async () => {
+    api.linkPlatforms.mockRejectedValueOnce(new Error('sem rede'));
+    await mount(<ImportLink />);
+    await setValue(container.querySelector('#link-url'), 'https://learn.microsoft.com/pt-br/training/paths/x/');
+    expect(container.querySelector('[role="status"]')).toBeNull();
+    expect(byText('Ver prévia').disabled).toBe(false);
+  });
+
+  it('mostra a mensagem de link inválido que a API devolve (específica de cada site)', async () => {
+    const msg = 'Esse link não parece ser de um curso da Microsoft Learn.';
+    api.linkPreview.mockRejectedValue(Object.assign(new Error(msg), { status: 400 }));
+    await mount(<ImportLink />);
+    await setValue(container.querySelector('#link-url'), 'https://learn.microsoft.com/pt-br/training/');
+    await act(async () => { byText('Ver prévia').click(); });
+    await flush();
+    expect(container.querySelector('[role="alert"]').textContent).toContain(msg);
   });
 });

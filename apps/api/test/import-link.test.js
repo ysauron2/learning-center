@@ -293,7 +293,7 @@ describe('rotas /courses/import-link', () => {
     const { call } = await open({ ...routes(), 'https://www.alura.com.br/curso-online-fora-do-ar': new Response('x', { status: 500 }) });
     const bad = await call('POST', '/courses/import-link/preview', { url: 'https://evil.com/curso' });
     expect(bad.status).toBe(400);
-    expect(bad.body.error).toMatchObject({ code: 'LINK_INVALID', message: 'Esse link não parece ser de um curso da Alura ou da Fundação Bradesco.' });
+    expect(bad.body.error).toMatchObject({ code: 'LINK_INVALID', message: 'Esse link não parece ser de um curso de uma plataforma aceita. Aceitamos: Alura, Fundação Bradesco, Microsoft Learn, freeCodeCamp, Coursera e Rocketseat.' });
     const down = await call('POST', '/courses/import-link/preview', { url: 'https://www.alura.com.br/curso-online-fora-do-ar' });
     expect(down.status).toBe(502);
     expect(down.body.error.message).toMatch(/A página não abriu/);

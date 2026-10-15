@@ -1,8 +1,9 @@
 import { HttpError } from './errors.js';
-import { parseCourseLink, platformForHost, isSafePublicUrl } from './platforms.js';
+import { PLATFORMS, platformAllowsUrl, platformAllowsImage } from './platforms.js';
 
 /**
- * Leitura das páginas PÚBLICAS de curso da Alura e da Fundação Bradesco (Escola Virtual), sem login.
+ * Base da leitura de páginas PÚBLICAS de curso (sem login): texto, busca segura e os leitores da Alura e da
+ * Fundação Bradesco (Escola Virtual). As outras plataformas ficam em course-sources.js; a escolha em course-loader.js.
  * Os parsers foram escritos contra páginas reais (veja test/fixtures) e dão preferência a dados
  * estruturados (JSON-LD, estado embutido do Next.js) antes de seletores de HTML.
  * Tudo que vem do site é tratado como TEXTO: nada de HTML vai para a interface.
@@ -16,10 +17,9 @@ const BROWSER_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
 const err = (status, code, message) => new HttpError(status, code, message);
 
 export const MESSAGES = {
-  invalidLink: 'Esse link não parece ser de um curso da Alura ou da Fundação Bradesco.',
   unreachable: 'A página não abriu. Confira o link e a sua conexão com a internet e tente de novo.',
   notFound: 'Essa página não existe ou saiu do ar. Confira o link.',
-  elsewhere: 'Esse link leva para fora da Alura ou da Fundação Bradesco, então não foi aberto.',
+  elsewhere: 'Esse link leva para fora do site da plataforma, então não foi aberto.',
   tooBig: 'A página veio grande demais para ser lida.',
   notCourse: 'Não encontrei os dados de um curso nessa página. Confira se o link é de um curso.',
 };
@@ -53,20 +53,20 @@ export function textOfHtml(html) {
     .join('\n');
 }
 
-const oneLine = (s, max) => decodeEntities(String(s ?? '')).replace(/\s+/g, ' ').trim().slice(0, max);
+export const oneLine = (s, max) => decodeEntities(String(s ?? '')).replace(/\s+/g, ' ').trim().slice(0, max);
 
-function metaContent(html, key) {
+export function metaContent(html, key) {
   const re = new RegExp(`<meta\\s[^>]*(?:property|name)=["']${key}["'][^>]*>`, 'i');
   const tag = re.exec(html)?.[0];
   return tag ? oneLine(/content=["']([^"']*)["']/i.exec(tag)?.[1], 2000) : '';
 }
 
-/** Só imagem https de um domínio da própria plataforma. */
-function platformImage(raw, platformId) {
+/** Só imagem https de um domínio da própria plataforma (ou de uma pasta de imagens dela, listada no registro). */
+export function platformImage(raw, platformId) {
   try {
     const u = new URL(String(raw ?? ''));
-    if (u.protocol !== 'https:' || u.href.length > 500) return null;
-    return platformForHost(u.hostname)?.id === platformId ? u.href : null;
+    if (u.href.length > 500) return null;
+    return platformAllowsImage(PLATFORMS[platformId], u) ? u.href : null;
   } catch {
     return null;
   }
@@ -212,10 +212,6 @@ export function parseBradescoPage(html, ref) {
   };
 }
 
-export function parsePage(platformId, html, ref) {
-  return platformId === 'alura' ? parseAluraPage(html, ref) : parseBradescoPage(html, ref);
-}
-
 /** Descrição final do curso: texto da página + carga horária, instrutor e área. */
 export function describeCourse(page) {
   const facts = [];
@@ -257,15 +253,21 @@ async function readLimited(res) {
  * são seguidos um a um e cada destino é conferido de novo (nunca sai da plataforma).
  */
 export async function fetchCoursePage(ref, fetchImpl = fetch) {
-  let current = new URL(ref.url);
+  const { text, finalUrl } = await fetchText(ref.url, ref.platform, fetchImpl);
+  return { html: text, finalUrl };
+}
+
+/** Baixa um texto público (página ou JSON) de um endereço que a plataforma permite; mesmas regras de segurança. */
+export async function fetchText(startUrl, platform, fetchImpl = fetch, { accept = 'text/html,application/xhtml+xml' } = {}) {
+  let current = new URL(startUrl);
   for (let hop = 0; hop <= MAX_REDIRECTS; hop += 1) {
-    if (!isSafePublicUrl(current) || platformForHost(current.hostname)?.id !== ref.platform.id) throw err(422, 'PAGE_ELSEWHERE', MESSAGES.elsewhere);
+    if (!platformAllowsUrl(platform, current)) throw err(422, 'PAGE_ELSEWHERE', MESSAGES.elsewhere);
     let res;
     try {
       res = await fetchImpl(current.href, {
         redirect: 'manual',
         signal: AbortSignal.timeout(TIMEOUT_MS),
-        headers: { 'User-Agent': BROWSER_UA, 'Accept-Language': 'pt-BR,pt;q=0.9', Accept: 'text/html,application/xhtml+xml' },
+        headers: { 'User-Agent': BROWSER_UA, 'Accept-Language': 'pt-BR,pt;q=0.9', Accept: accept },
       });
     } catch {
       throw err(502, 'PAGE_UNREACHABLE', MESSAGES.unreachable);
@@ -285,7 +287,7 @@ export async function fetchCoursePage(ref, fetchImpl = fetch) {
     if (res.status === 404 || res.status === 410) throw err(404, 'PAGE_NOT_FOUND', MESSAGES.notFound);
     if (!res.ok) throw err(502, 'PAGE_UNREACHABLE', MESSAGES.unreachable);
     try {
-      return { html: await readLimited(res), finalUrl: current.href };
+      return { text: await readLimited(res), finalUrl: current.href };
     } catch (e) {
       if (e instanceof HttpError) throw e;
       throw err(502, 'PAGE_UNREACHABLE', MESSAGES.unreachable);
@@ -293,16 +295,3 @@ export async function fetchCoursePage(ref, fetchImpl = fetch) {
   }
   throw err(502, 'PAGE_UNREACHABLE', MESSAGES.unreachable);
 }
-
-/** Do link colado ao curso lido. */
-export async function loadCourseFromLink(rawUrl, fetchImpl) {
-  const ref = parseCourseLink(rawUrl);
-  if (!ref) throw err(400, 'LINK_INVALID', MESSAGES.invalidLink);
-  const { html, finalUrl } = await fetchCoursePage(ref, fetchImpl);
-  // se o site redirecionou (ex.: cursos.alura.com.br/course/x → www.alura.com.br/curso-online-x), vale o endereço final;
-  // se terminou numa página que não é de curso (ex.: a página inicial), o curso não existe
-  const finalRef = parseCourseLink(finalUrl);
-  if (!finalRef || finalRef.platform.id !== ref.platform.id) throw err(422, 'COURSE_NOT_FOUND', MESSAGES.notCourse);
-  return parsePage(ref.platform.id, html, finalRef);
-}
-

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { transaction } from '../../core/db.js';
-import { loadCourseFromLink, describeCourse } from '../../core/course-pages.js';
+import { describeCourse } from '../../core/course-pages.js';
+import { loadCourseFromLink } from '../../core/course-loader.js';
 import { PLATFORMS, parseCourseLink } from '../../core/platforms.js';
 
 export const linkBody = z.object({
@@ -38,6 +39,7 @@ export function createLinkImporter({ db, courses, contentImporter, fetchImpl }) 
     }
     return {
       platform: page.platform,
+      platformName: PLATFORMS[page.platform].name,
       title: page.title,
       url: page.url,
       description: describeCourse(page),

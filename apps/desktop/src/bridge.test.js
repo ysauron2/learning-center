@@ -241,7 +241,9 @@ describe('plataformas: Alura e Fundação Bradesco', () => {
   it('o registro do desktop concorda com o da API (mesmos domínios)', async () => {
     const { PLATFORMS: desk } = await import('./platforms.js');
     const { PLATFORMS: api } = await import('../../api/src/core/platforms.js');
-    for (const id of Object.keys(api)) expect(desk[id].domains, id).toEqual(api[id].domains);
+    // plataformas só de link (Microsoft Learn etc.) não têm janela logada no desktop
+    for (const id of Object.keys(api).filter((k) => !api[k].linkOnly)) expect(desk[id].domains, id).toEqual(api[id].domains);
+    for (const id of Object.keys(api).filter((k) => api[k].linkOnly)) expect(desk[id], id).toBeUndefined();
     expect(desk.alura.home).toBe(api.alura.myCoursesUrl);
     expect(desk.bradesco.home).toBe(api.bradesco.myCoursesUrl);
   });

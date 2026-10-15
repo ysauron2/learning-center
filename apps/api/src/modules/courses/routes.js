@@ -7,6 +7,7 @@ import { importBody } from './import.js';
 import { contentBody } from './import-content.js';
 import { youtubeBody, textBody } from './import-other.js';
 import { linkBody } from './import-link.js';
+import { platformsForUi } from '../../core/platforms.js';
 
 function intParam(req) {
   const id = Number.parseInt(req.params.id, 10);
@@ -22,6 +23,7 @@ export function coursesRoutes(app, { courses, courseImporter, contentImporter, o
   });
   app.post('/courses/import/preview', async (req) => ({ data: courseImporter.preview(parse(importBody, req.body)) }));
   app.post('/courses/import', async (req) => ({ data: courseImporter.run(parse(importBody, req.body)) }));
+  app.get('/courses/import-link/platforms', async () => ({ data: platformsForUi() }));
   app.post('/courses/import-link/preview', async (req) => ({ data: await linkImporter.preview(parse(linkBody, req.body)) }));
   app.post('/courses/import-link', async (req) => ({ data: await linkImporter.run(parse(linkBody, req.body)) }));
   app.post('/courses/import-youtube/preview', async (req) => ({ data: await otherImporters.youtubePreview(parse(youtubeBody, req.body)) }));

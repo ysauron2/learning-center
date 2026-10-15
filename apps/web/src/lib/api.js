@@ -46,6 +46,7 @@ export const api = {
   setCourseStatus: (id, status) => request('POST', `/courses/${id}/status`, { status }),
   importPreview: (items, platform) => request('POST', '/courses/import/preview', { items, updateProgress: true, ...(platform && platform !== 'udemy' ? { platform } : {}) }),
   importCourses: (items, category, platform) => request('POST', '/courses/import', { items, updateProgress: true, ...(category ? { category } : {}), ...(platform && platform !== 'udemy' ? { platform } : {}) }),
+  linkPlatforms: () => request('GET', '/courses/import-link/platforms'),
   linkPreview: (url) => request('POST', '/courses/import-link/preview', { url }),
   importLink: (url, category) => request('POST', '/courses/import-link', { url, ...(category ? { category } : {}) }),
   importContentPreview: (id, modules, url) => request('POST', `/courses/${id}/import-content/preview`, { modules, url }),
