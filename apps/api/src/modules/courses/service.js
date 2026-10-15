@@ -49,6 +49,7 @@ export function createCoursesService(db, clock) {
       doneLessons: row.done_lessons,
       studiedMinutes: Math.round(row.studied_sec / 60),
       lastStudiedAt: row.last_studied_at,
+      lastVisitedAt: row.last_visited_at ?? null,
       tags: tags ?? [],
       createdAt: row.created_at,
       updatedAt: row.updated_at,

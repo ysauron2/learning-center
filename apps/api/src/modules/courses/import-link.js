@@ -89,5 +89,5 @@ export function createLinkImporter({ db, courses, contentImporter, fetchImpl }) 
     return { created: true, courseId: id, title: page.title, lessonsAdded, warnings: lessonsAdded ? [] : [NO_LESSONS] };
   }
 
-  return { preview, run };
+  return { preview, run, findByKey: (key) => findExisting({ key }) };
 }

@@ -28,6 +28,8 @@ const courseRow = z.object({
   udemy_slug: z.string().max(300).nullish().transform((v) => v ?? null),
   // ausente em backups antigos (anteriores à importação da Alura e da Fundação Bradesco)
   source_key: z.string().max(300).nullish().transform((v) => v ?? null),
+  // ausente em backups antigos (anteriores à detecção automática de cursos)
+  last_visited_at: z.string().max(40).nullish().transform((v) => v ?? null),
   status: z.enum(['planned', 'active', 'paused', 'completed']),
   manual_progress: z.number().int().min(0).max(100),
   created_at: z.string().min(1).max(40),
@@ -126,7 +128,7 @@ const backupSchema = z.object({
 });
 
 const COLUMNS = {
-  courses: 'id, title, platform, category, description, url, image_url, udemy_slug, source_key, status, manual_progress, created_at, updated_at',
+  courses: 'id, title, platform, category, description, url, image_url, udemy_slug, source_key, last_visited_at, status, manual_progress, created_at, updated_at',
   courseTags: 'course_id, tag',
   modules: 'id, course_id, title, position',
   lessons: 'id, module_id, course_id, title, duration_min, position, completed_at, last_position_sec',

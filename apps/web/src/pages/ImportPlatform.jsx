@@ -12,6 +12,7 @@ import { ChoiceOrNew } from '../components/ChoiceOrNew.jsx';
 import { DEFAULT_CATEGORIES } from '../lib/choices.js';
 import { useAsync } from '../lib/hooks.js';
 import { ErrorState, ProgressBar } from '../components/ui.jsx';
+import { AutoDetectSwitch } from '../components/AutoDetectSwitch.jsx';
 
 /** Importar os cursos de uma plataforma (lista "Meus cursos" lida pelo app desktop ou pela extensão). */
 export default function ImportPlatform({ platform = 'udemy' }) {
@@ -168,6 +169,7 @@ export default function ImportPlatform({ platform = 'udemy' }) {
       )}
 
       {!preview && !result && info.byLink && <ImportByLink platform={platform} />}
+      {!preview && !result && <AutoDetectSwitch />}
     </>
   );
 }

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Lume · Importar da Udemy, Alura e Fundação Bradesco",
-  "version": "0.2.0",
-  "description": "Lê a lista dos seus cursos (você já logado) na Udemy, na Alura ou na Escola Virtual da Fundação Bradesco e leva para o seu Lume local.",
+  "name": "Lume · Importar e marcar cursos",
+  "version": "0.3.0",
+  "description": "Lê a lista dos seus cursos (você já logado) na Udemy, na Alura ou na Escola Virtual e, se você deixar, marca no seu Lume local o curso que você abre nas plataformas. Fala só com o Lume do seu computador.",
   "permissions": [
     "storage"
   ],

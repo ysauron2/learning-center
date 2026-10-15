@@ -16,6 +16,7 @@ import { createCourseImporter } from './modules/courses/import.js';
 import { createContentImporter } from './modules/courses/import-content.js';
 import { createOtherImporters } from './modules/courses/import-other.js';
 import { createLinkImporter } from './modules/courses/import-link.js';
+import { createVisitService } from './modules/courses/visit.js';
 import { createSessionsService } from './modules/sessions/service.js';
 import { createGoalsService } from './modules/goals/service.js';
 import { createDashboardService } from './modules/dashboard/service.js';
@@ -46,6 +47,7 @@ export function createLearningCenter({ db, clock = systemClock, runMigrations = 
   const contentImporter = createContentImporter(db, courses);
   const otherImporters = createOtherImporters({ db, courses, contentImporter, fetchImpl: youtubeFetch });
   const linkImporter = createLinkImporter({ db, courses, contentImporter, fetchImpl: linkFetch });
+  const visits = createVisitService({ db, clock, courses, linkImporter });
   const sessions = createSessionsService(db, clock);
   const goals = createGoalsService(db, clock, sessions);
   const dashboard = createDashboardService({ db, clock, courses, sessions, goals });
@@ -56,7 +58,7 @@ export function createLearningCenter({ db, clock = systemClock, runMigrations = 
   const options = createOptionsService(db);
   const calendar = createCalendarService({ db, clock, courses, fetchImpl: googleFetch });
   const notion = createNotionService({ db, clock, courses, fetchImpl: notionFetch, pauseMs: notionPauseMs, sleep: notionSleep });
-  return { courses, courseImporter, contentImporter, otherImporters, linkImporter, sessions, goals, dashboard, analytics, backup, notes, tracks, options, calendar, notion };
+  return { courses, courseImporter, contentImporter, otherImporters, linkImporter, visits, sessions, goals, dashboard, analytics, backup, notes, tracks, options, calendar, notion };
 }
 
 /** Plugin Fastify (encapsulado: o error handler vale só dentro do prefixo). */

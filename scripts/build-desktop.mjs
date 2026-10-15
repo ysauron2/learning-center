@@ -43,8 +43,9 @@ ${f['content-app.js']}
 `;
   return {
     'preload-udemy.cjs': wrap(f['content-udemy.js']),
-    'preload-alura.cjs': wrap(f['content-alura.js']),
-    'preload-bradesco.cjs': wrap(f['content-bradesco.js']),
+    // a detecção automática do curso aberto roda nas janelas da Alura e da Fundação Bradesco (Microsoft Learn etc. não têm janela no app)
+    'preload-alura.cjs': wrap(`${f['content-alura.js']}\n${f['content-visit.js']}`),
+    'preload-bradesco.cjs': wrap(`${f['content-bradesco.js']}\n${f['content-visit.js']}`),
     'preload-app.cjs': app,
   };
 }

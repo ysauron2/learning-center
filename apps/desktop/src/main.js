@@ -225,7 +225,7 @@ if (!app.requestSingleInstanceLock()) {
       const platformId = PLATFORM_IDS.find((id) => platformWins[id] && !platformWins[id].isDestroyed() && wc === platformWins[id].webContents);
       if (platformId) kind = senderKind(url, base) === platformId ? platformId : null;
       else if (mainWin && wc === mainWin.webContents) kind = senderKind(url, base) === 'app' ? 'app' : null;
-      return bridge.handle(msg, kind);
+      return bridge.handle(msg, kind, url);
     });
 
     buildMenu();

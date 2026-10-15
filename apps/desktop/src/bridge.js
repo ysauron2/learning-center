@@ -49,6 +49,7 @@ const ALLOWED = {
   'lc-sync': 'platform',
   'lc-items': 'platform',
   'lc-content': 'udemy',
+  'lc-visit': 'platform', // detecção do curso aberto: vale para as janelas de plataforma, menos a Udemy (veja abaixo)
   'storage-get': 'platform',
   'storage-set': 'platform',
   'lc-get': 'app',
@@ -62,11 +63,11 @@ const bad = { ok: false, reason: 'bad-request' };
 export function createBridge({ apiBase, fetchImpl = fetch, settings, saveSettings, openAppPage, openUdemy = () => {}, openPlatform = () => {}, getUpdates = () => null }) {
   const pending = { items: null, content: null, platform: 'udemy' };
 
-  async function callApi(path, body) {
+  async function callApi(path, body, method = 'POST') {
     let res;
     try {
       res = await fetchImpl(`${apiBase}/api/v1${path}`, {
-        method: 'POST',
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
@@ -78,10 +79,65 @@ export function createBridge({ apiBase, fetchImpl = fetch, settings, saveSetting
     return { ok: true, data: json ? json.data : null };
   }
 
-  async function handle(msg, kind) {
+  // ---- detecção automática do curso aberto ----
+  // O endereço vem da janela que enviou (sem parâmetros de busca nem fragmento); a mensagem só traz título, progresso e a resposta da pessoa.
+  // O que volta para a página é só texto de aviso (título do curso e um código de uso único para desfazer).
+  const lastVisit = new Map(); // limite de frequência por curso
+  const text = (v, max) => (typeof v === 'string' ? v.slice(0, max) : '');
+  function noticeFrom(res) {
+    if (!res.ok || !res.data) return { ok: true };
+    const d = res.data;
+    if (d.action === 'ask') return { ok: true, notice: { action: 'ask', title: text(d.title, 160) } };
+    if ((d.action === 'created' || d.action === 'activated') && d.course && d.undoToken) {
+      return { ok: true, notice: { action: d.action, title: text(d.course.title, 160), token: text(d.undoToken, 100) } };
+    }
+    return { ok: true };
+  }
+  async function handleVisit(msg, kind, senderUrl) {
+    let url;
+    try {
+      const u = new URL(senderUrl);
+      url = u.origin + u.pathname;
+    } catch {
+      return bad;
+    }
+    const base = { platform: kind, url };
+    const title = text(msg.title, 400);
+    const pct = typeof msg.progressPercent === 'number' && msg.progressPercent >= 0 && msg.progressPercent <= 100 ? Math.round(msg.progressPercent) : undefined;
+    switch (msg.step) {
+      case 'visit': {
+        const last = lastVisit.get(url);
+        if (last && Date.now() - last < 60000 && pct === undefined) return { ok: true };
+        lastVisit.set(url, Date.now());
+        if (lastVisit.size > 200) lastVisit.delete(lastVisit.keys().next().value);
+        return noticeFrom(await callApi('/courses/visit', { ...base, ...(title ? { title } : {}), ...(pct === undefined ? {} : { progressPercent: pct }) }));
+      }
+      case 'add':
+        return noticeFrom(await callApi('/courses/visit', { ...base, confirm: true }));
+      case 'always': {
+        const set = await callApi('/settings/auto-detect', { mode: 'auto' }, 'PATCH');
+        if (!set.ok) return { ok: true };
+        return noticeFrom(await callApi('/courses/visit', { ...base, confirm: true }));
+      }
+      case 'later':
+        await callApi('/courses/visit/dismiss', base);
+        return { ok: true };
+      case 'undo': {
+        const token = text(msg.token, 100);
+        if (!token) return bad;
+        const r = await callApi('/courses/visit/undo', { token });
+        return { ok: true, undone: Boolean(r.ok && r.data && r.data.undone) };
+      }
+      default:
+        return bad;
+    }
+  }
+
+  async function handle(msg, kind, senderUrl = '') {
     if (!msg || typeof msg !== 'object' || !(msg.type in ALLOWED)) return { ok: false, reason: 'unknown' };
     const allowed = ALLOWED[msg.type] === 'platform' ? PLATFORM_IDS.includes(kind) : kind === ALLOWED[msg.type];
     if (!allowed) return { ok: false, reason: 'forbidden' };
+    if (msg.type === 'lc-visit') return kind === 'udemy' ? { ok: false, reason: 'forbidden' } : handleVisit(msg, kind, senderUrl);
 
     switch (msg.type) {
       case 'lc-sync':
