@@ -28,6 +28,8 @@ como “em breve” na navegação e entram nas próximas fases (veja `docs/ARQU
   logado) e cadastra os cursos novos, com prévia antes de salvar; também importa módulos e aulas de cada curso (um clique por curso). Veja
   [`docs/IMPORTACAO-UDEMY.md`](docs/IMPORTACAO-UDEMY.md).
 
+- **Importar de outra plataforma**: cole o link de uma playlist pública do YouTube ou uma lista de aulas e o Lume monta o curso (módulos, aulas e tempos). Veja [`docs/IMPORTACAO-OUTRAS.md`](docs/IMPORTACAO-OUTRAS.md).
+
 Nada depende de API externa (a API de Afiliado da Udemy foi descartada): o acompanhamento é
 manual, e a importação da Udemy só traz o que a própria página mostra (cursos, progresso, módulos e aulas).
 

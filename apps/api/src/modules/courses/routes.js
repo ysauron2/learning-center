@@ -5,13 +5,14 @@ import {
 } from './schemas.js';
 import { importBody } from './import.js';
 import { contentBody } from './import-content.js';
+import { youtubeBody, textBody } from './import-other.js';
 
 function intParam(req) {
   const id = Number.parseInt(req.params.id, 10);
   return Number.isInteger(id) && id > 0 ? id : -1;
 }
 
-export function coursesRoutes(app, { courses, courseImporter, contentImporter }) {
+export function coursesRoutes(app, { courses, courseImporter, contentImporter, otherImporters }) {
   app.get('/courses', async (req) => ({ data: courses.list(parse(courseQuery, req.query)) }));
   app.get('/courses/summary', async () => ({ data: courses.summary() }));
   app.post('/courses', async (req, reply) => {
@@ -20,6 +21,10 @@ export function coursesRoutes(app, { courses, courseImporter, contentImporter })
   });
   app.post('/courses/import/preview', async (req) => ({ data: courseImporter.preview(parse(importBody, req.body)) }));
   app.post('/courses/import', async (req) => ({ data: courseImporter.run(parse(importBody, req.body)) }));
+  app.post('/courses/import-youtube/preview', async (req) => ({ data: await otherImporters.youtubePreview(parse(youtubeBody, req.body)) }));
+  app.post('/courses/import-youtube', async (req) => ({ data: await otherImporters.youtubeRun(parse(youtubeBody, req.body)) }));
+  app.post('/courses/import-text/preview', async (req) => ({ data: otherImporters.textPreview(parse(textBody, req.body)) }));
+  app.post('/courses/import-text', async (req) => ({ data: otherImporters.textRun(parse(textBody, req.body)) }));
   app.post('/courses/sync-content', async (req) => ({ data: contentImporter.sync(parse(contentBody, req.body)) }));
   app.post('/courses/:id/import-content/preview', async (req) => ({ data: contentImporter.preview(intParam(req), parse(contentBody, req.body)) }));
   app.post('/courses/:id/import-content', async (req) => ({ data: contentImporter.run(intParam(req), parse(contentBody, req.body)) }));

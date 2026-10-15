@@ -8,6 +8,7 @@ import Courses from './pages/Courses.jsx';
 import CourseDetail from './pages/CourseDetail.jsx';
 const ImportUdemy = lazy(() => import('./pages/ImportUdemy.jsx'));
 const ImportContent = lazy(() => import('./pages/ImportContent.jsx'));
+const ImportOther = lazy(() => import('./pages/ImportOther.jsx'));
 const Notes = lazy(() => import('./pages/Notes.jsx'));
 const Tracks = lazy(() => import('./pages/Tracks.jsx'));
 const TrackDetail = lazy(() => import('./pages/TrackDetail.jsx'));
@@ -35,6 +36,7 @@ export default function App() {
         <Route path="cursos/:id" element={<CourseDetail />} />
         <Route path="importar" element={<Suspense fallback={<Skeleton height={340} />}><ImportUdemy /></Suspense>} />
         <Route path="importar-conteudo" element={<Suspense fallback={<Skeleton height={340} />}><ImportContent /></Suspense>} />
+        <Route path="importar-outras" element={<Suspense fallback={<Skeleton height={340} />}><ImportOther /></Suspense>} />
         <Route path="anotacoes/:id?" element={<Suspense fallback={<Skeleton height={340} />}><Notes /></Suspense>} />
         <Route path="trilhas" element={<Suspense fallback={<Skeleton height={340} />}><Tracks /></Suspense>} />
         <Route path="trilhas/:id" element={<Suspense fallback={<Skeleton height={340} />}><TrackDetail /></Suspense>} />

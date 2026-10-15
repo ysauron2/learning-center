@@ -174,13 +174,14 @@ button { cursor: pointer; }
 
 .chip { display: inline-flex; align-items: center; min-height: 40px; padding: 0 16px; border-radius: 99px; border: 1px solid var(--border);
   background: var(--surface); color: var(--text-2); font-size: 13px; font-weight: 600; }
-.chip[aria-pressed='true'] { background: var(--brand-soft); border-color: var(--brand); color: var(--brand-text); }
+.chip[aria-pressed='true'], .chip[aria-selected='true'] { background: var(--brand-soft); border-color: var(--brand); color: var(--brand-text); }
 
 .empty { text-align: center; padding: 48px 24px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
 .empty-icon { width: 56px; height: 56px; border-radius: 18px; background: var(--brand-soft); color: var(--brand-text); display: grid; place-items: center; }
 .empty h3 { margin: 0; font-family: var(--font-display); font-size: 20px; }
 .empty p { margin: 0; color: var(--text-2); max-width: 420px; }
 .alert { padding: 12px 16px; border-radius: 12px; font-size: 14px; font-weight: 500; }
+.alert:not(.error) { background: var(--brand-soft); margin: 8px 0; }
 .alert.error { background: var(--danger-soft); color: var(--danger); }
 .skeleton { background: var(--track); border-radius: 12px; animation: pulse 1.4s ease-in-out infinite; }
 @keyframes pulse { 50% { opacity: .55; } }

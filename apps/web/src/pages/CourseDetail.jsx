@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../lib/api.js';
 import { useAsync, useToast } from '../lib/hooks.js';
 import { formatMinutes, relativeDay } from '../lib/format.js';
@@ -57,6 +57,8 @@ export default function CourseDetail() {
   const [editing, setEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [toast, showToast] = useToast();
+  const flash = useLocation().state?.flash; // mensagem enviada por quem levou até aqui (ex.: importação)
+  useEffect(() => { if (flash) showToast(flash); }, [flash]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (error) {
     return error.status === 404 ? (
